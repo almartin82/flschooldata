@@ -1,0 +1,25 @@
+# R files
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Package files
+*.tar.gz
+*.Rcheck/
+
+# Compiled files
+*.o
+*.so
+*.dll
+
+# IDE files
+.idea/
+*.swp
+*~
+
+# pkgdown
+docs/
+
+# macOS
+.DS_Store

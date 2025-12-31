@@ -1,0 +1,38 @@
+url: https://almartin82.github.io/flschooldata/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left:  [intro, reference, articles]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/almartin82/flschooldata
+
+reference:
+  - title: "Fetch Data"
+    desc: "Functions to download enrollment data from FLDOE"
+    contents:
+      - fetch_enr
+      - fetch_enr_multi
+
+  - title: "Transform Data"
+    desc: "Functions to reshape and aggregate enrollment data"
+    contents:
+      - tidy_enr
+      - id_enr_aggs
+      - enr_grade_aggs
+
+  - title: "Cache Management"
+    desc: "Functions to manage locally cached data"
+    contents:
+      - cache_status
+      - clear_cache
+
+  - title: "Package"
+    desc: "Package documentation"
+    contents:
+      - flschooldata-package
