@@ -2,10 +2,11 @@
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/almartin82/flschooldata/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/almartin82/flschooldata/actions/workflows/R-CMD-check.yaml)
+[![Python Tests](https://github.com/almartin82/flschooldata/actions/workflows/python-test.yaml/badge.svg)](https://github.com/almartin82/flschooldata/actions/workflows/python-test.yaml)
 [![pkgdown](https://github.com/almartin82/flschooldata/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/almartin82/flschooldata/actions/workflows/pkgdown.yaml)
 <!-- badges: end -->
 
-Fetch and analyze Florida public school enrollment data from the Florida Department of Education (FLDOE).
+Fetch and analyze Florida school enrollment data from the Florida Department of Education (FLDOE) in R or Python.
 
 **[Documentation](https://almartin82.github.io/flschooldata/)** | **[10 Key Insights](https://almartin82.github.io/flschooldata/articles/enrollment_hooks.html)** | **[Getting Started](https://almartin82.github.io/flschooldata/articles/quickstart.html)**
 
@@ -195,6 +196,8 @@ remotes::install_github("almartin82/flschooldata")
 
 ## Quick start
 
+### R
+
 ```r
 library(flschooldata)
 library(dplyr)
@@ -217,6 +220,32 @@ enr_2025 %>%
 # Miami-Dade County (district 13)
 enr_2025 %>%
   filter(district_id == "13", subgroup == "total_enrollment")
+```
+
+### Python
+
+```python
+import pyflschooldata as fl
+
+# Check available years
+years = fl.get_available_years()
+print(f"Data available: {years['min_year']}-{years['max_year']}")
+
+# Fetch one year
+df = fl.fetch_enr(2025)
+
+# Fetch multiple years
+df_multi = fl.fetch_enr_multi([2020, 2021, 2022, 2023, 2024, 2025])
+
+# State totals
+state_total = df[(df['is_state'] == True) &
+                 (df['subgroup'] == 'total_enrollment') &
+                 (df['grade_level'] == 'TOTAL')]
+
+# District breakdown
+districts = df[(df['is_district'] == True) &
+               (df['subgroup'] == 'total_enrollment') &
+               (df['grade_level'] == 'TOTAL')].sort_values('n_students', ascending=False)
 ```
 
 ## Data availability
