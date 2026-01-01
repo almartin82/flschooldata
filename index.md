@@ -1,0 +1,285 @@
+# flschooldata
+
+Fetch and analyze Florida public school enrollment data from the Florida
+Department of Education (FLDOE).
+
+**[Documentation](https://almartin82.github.io/flschooldata/)** \|
+**[Getting
+Started](https://almartin82.github.io/flschooldata/articles/quickstart.html)**
+
+## What can you find with flschooldata?
+
+**18 years of enrollment data (2008-2025).** 2.9 million students across
+67 county districts in the Sunshine State. Here are ten stories hiding
+in the numbers:
+
+------------------------------------------------------------------------
+
+### 1. Florida is America’s fourth-largest school system
+
+Florida public schools serve nearly 3 million students, trailing only
+California, Texas, and New York. One function call pulls it all into R.
+
+``` r
+library(flschooldata)
+library(dplyr)
+
+enr <- fetch_enr_multi(2014:2025)
+
+enr %>%
+  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") %>%
+  select(end_year, n_students) %>%
+  mutate(change = n_students - lag(n_students))
+```
+
+------------------------------------------------------------------------
+
+### 2. Miami-Dade is larger than most states
+
+Miami-Dade County Public Schools, with 340,000+ students, is the
+fourth-largest school district in America and enrolls more students than
+several entire states.
+
+``` r
+enr_2025 <- fetch_enr(2025)
+
+enr_2025 %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") %>%
+  arrange(desc(n_students)) %>%
+  head(10) %>%
+  select(district_name, n_students)
+```
+
+------------------------------------------------------------------------
+
+### 3. COVID barely dented Florida enrollment
+
+While other states saw sharp declines, Florida’s enrollment dipped only
+briefly in 2021 and has since rebounded, fueled by in-migration from
+other states.
+
+``` r
+enr <- fetch_enr_multi(2019:2025)
+
+enr %>%
+  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") %>%
+  select(end_year, n_students) %>%
+  mutate(change = n_students - lag(n_students))
+```
+
+------------------------------------------------------------------------
+
+### 4. Hispanic students are the plurality
+
+Hispanic students now comprise over 35% of Florida enrollment,
+surpassing white students to become the largest demographic group
+statewide.
+
+``` r
+enr_2025 %>%
+  filter(is_state, grade_level == "TOTAL",
+         subgroup %in% c("hispanic", "white", "black", "asian", "multiracial")) %>%
+  mutate(pct = round(pct * 100, 1)) %>%
+  select(subgroup, n_students, pct) %>%
+  arrange(desc(n_students))
+```
+
+------------------------------------------------------------------------
+
+### 5. Central Florida is the growth engine
+
+Orange, Osceola, and Polk counties in Central Florida have been among
+the fastest-growing in the state, driven by the Orlando metro boom.
+
+``` r
+enr <- fetch_enr_multi(2014:2025)
+
+enr %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Orange|Osceola|Polk", district_name)) %>%
+  group_by(district_name) %>%
+  summarize(
+    y2014 = n_students[end_year == 2014],
+    y2025 = n_students[end_year == 2025],
+    pct_change = round((y2025 / y2014 - 1) * 100, 1)
+  ) %>%
+  arrange(desc(pct_change))
+```
+
+------------------------------------------------------------------------
+
+### 6. Broward and Miami-Dade are declining
+
+South Florida’s two largest districts have been losing students for
+years as families relocate to Central Florida or out of state.
+
+``` r
+enr <- fetch_enr_multi(2018:2025)
+
+enr %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Broward|Miami-Dade", district_name)) %>%
+  select(end_year, district_name, n_students) %>%
+  tidyr::pivot_wider(names_from = district_name, values_from = n_students)
+```
+
+------------------------------------------------------------------------
+
+### 7. Florida Virtual School is a district unto itself
+
+Florida Virtual School (FLVS) serves tens of thousands of students
+statewide, making Florida a pioneer in virtual education.
+
+``` r
+enr_2025 %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Virtual|FLVS", district_name, ignore.case = TRUE)) %>%
+  select(district_name, n_students)
+```
+
+------------------------------------------------------------------------
+
+### 8. Kindergarten is the leading indicator
+
+Florida kindergarten enrollment has been relatively stable, unlike
+states with sharp K declines–reflecting Florida’s continued population
+growth.
+
+``` r
+enr <- fetch_enr_multi(2019:2025)
+
+enr %>%
+  filter(is_state, subgroup == "total_enrollment",
+         grade_level %in% c("K", "01", "05", "09")) %>%
+  select(end_year, grade_level, n_students) %>%
+  tidyr::pivot_wider(names_from = grade_level, values_from = n_students)
+```
+
+------------------------------------------------------------------------
+
+### 9. Black students are 22% of enrollment
+
+Florida has a significant Black student population, concentrated in
+South Florida and the Jacksonville/North Florida region.
+
+``` r
+enr_2025 %>%
+  filter(is_district, subgroup == "black", grade_level == "TOTAL") %>%
+  mutate(pct = round(pct * 100, 1)) %>%
+  arrange(desc(pct)) %>%
+  head(10) %>%
+  select(district_name, n_students, pct)
+```
+
+------------------------------------------------------------------------
+
+### 10. Florida has one district per county
+
+Unlike states with hundreds of small districts, Florida has exactly 67
+county-based school districts (plus a few special-purpose districts),
+making statewide analysis cleaner.
+
+``` r
+enr_2025 %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") %>%
+  summarize(
+    n_districts = n(),
+    total_students = sum(n_students, na.rm = TRUE),
+    avg_per_district = round(mean(n_students, na.rm = TRUE))
+  )
+```
+
+------------------------------------------------------------------------
+
+## Installation
+
+``` r
+# install.packages("remotes")
+remotes::install_github("almartin82/flschooldata")
+```
+
+## Quick start
+
+``` r
+library(flschooldata)
+library(dplyr)
+
+# Fetch one year
+enr_2025 <- fetch_enr(2025)
+
+# Fetch multiple years
+enr_multi <- fetch_enr_multi(2020:2025)
+
+# State totals
+enr_2025 %>%
+  filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL")
+
+# District breakdown
+enr_2025 %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") %>%
+  arrange(desc(n_students))
+
+# Miami-Dade County (district 13)
+enr_2025 %>%
+  filter(district_id == "13", subgroup == "total_enrollment")
+```
+
+## Data availability
+
+| Years         | Source                 | Notes                              |
+|---------------|------------------------|------------------------------------|
+| **2014-2025** | FLDOE Membership Files | Full school-level demographic data |
+| **2008-2013** | FLDOE FTE Files        | District-level totals only         |
+
+Data is sourced from the Florida Department of Education.
+
+### What’s included
+
+- **Levels:** State, district (67 county + special), school (~4,500)
+- **Demographics:** White, Black, Hispanic, Asian, American Indian,
+  Pacific Islander, Two or More Races
+- **Gender:** Male, Female
+- **Grade levels:** Pre-K through 12
+
+### Florida ID system
+
+- **67 county districts:** Codes 01-67 (one per county)
+- **Special districts:** Codes 71-75 (lab schools, FL School for
+  Deaf/Blind)
+- **School numbers:** 4-digit codes
+- **Combined ID:** `DD-SSSS` format (e.g., “13-0021” for a Miami-Dade
+  school)
+
+### Caveats
+
+- Pre-2014 data has limited demographics (FTE files only)
+- Charter school identification not directly available in membership
+  files
+- ESE, ELL, and free/reduced lunch in separate files (not yet
+  integrated)
+
+## Data source
+
+Florida Department of Education: [PK-12 Data
+Publications](https://www.fldoe.org/accountability/data-sys/edu-info-accountability-services/pk-12-public-school-data-pubs-reports/students.stml)
+
+## Part of the 50 State Schooldata Family
+
+This package is part of a family of R packages providing school
+enrollment data for all 50 US states. Each package fetches data directly
+from the state’s Department of Education.
+
+**See also:**
+[njschooldata](https://github.com/almartin82/njschooldata) - The
+original state schooldata package for New Jersey.
+
+**All packages:**
+[github.com/almartin82](https://github.com/almartin82?tab=repositories&q=schooldata)
+
+## Author
+
+[Andy Martin](https://github.com/almartin82) (<almartin@gmail.com>)
+
+## License
+
+MIT
