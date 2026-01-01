@@ -333,16 +333,16 @@ aggregate_to_district <- function(campus_df, end_year) {
 
   if (length(num_cols) == 0) {
     # No numeric columns to aggregate
-    district_data <- campus_df %>%
-      dplyr::select(dplyr::all_of(dist_col)) %>%
+    district_data <- campus_df |>
+      dplyr::select(dplyr::all_of(dist_col)) |>
       dplyr::distinct()
     return(district_data)
   }
 
   # Convert to numeric and aggregate
-  district_data <- campus_df %>%
-    dplyr::mutate(dplyr::across(dplyr::all_of(num_cols), ~suppressWarnings(as.numeric(.x)))) %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(dist_col))) %>%
+  district_data <- campus_df |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(num_cols), ~suppressWarnings(as.numeric(.x)))) |>
+    dplyr::group_by(dplyr::across(dplyr::all_of(dist_col))) |>
     dplyr::summarize(
       dplyr::across(dplyr::all_of(num_cols), ~sum(.x, na.rm = TRUE)),
       .groups = "drop"
@@ -351,9 +351,9 @@ aggregate_to_district <- function(campus_df, end_year) {
   # Add district name if available
   dist_name_col <- grep("^DISTRICT_NAME$", names(campus_df), value = TRUE, ignore.case = TRUE)[1]
   if (!is.na(dist_name_col)) {
-    dist_names <- campus_df %>%
-      dplyr::select(dplyr::all_of(c(dist_col, dist_name_col))) %>%
-      dplyr::distinct() %>%
+    dist_names <- campus_df |>
+      dplyr::select(dplyr::all_of(c(dist_col, dist_name_col))) |>
+      dplyr::distinct() |>
       dplyr::filter(!is.na(.[[1]]))
 
     district_data <- dplyr::left_join(district_data, dist_names, by = dist_col)

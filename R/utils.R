@@ -2,19 +2,7 @@
 # Utility Functions
 # ==============================================================================
 
-#' Pipe operator
-#'
-#' See \code{dplyr::\link[dplyr:reexports]{\%>\%}} for details.
-#'
-#' @name %>%
-#' @rdname pipe
-#' @keywords internal
-#' @export
-#' @importFrom dplyr %>%
-#' @usage lhs \%>\% rhs
-#' @param lhs A value or the magrittr placeholder.
-#' @param rhs A function call using the magrittr semantics.
-#' @return The result of calling `rhs(lhs)`.
+#' @importFrom rlang .data
 NULL
 
 
@@ -138,4 +126,32 @@ parse_fl_school_id <- function(school_id) {
   } else {
     list(district_num = NA_character_, school_num = NA_character_)
   }
+}
+
+
+#' Get available years for Florida enrollment data
+#'
+#' Returns the range of years available from the Florida Department of
+#' Education (FLDOE). Data is available from the 2007-08 school year
+#' (end_year = 2008) through 2024-25 (end_year = 2025).
+#'
+#' Note: Years 2008-2013 have limited demographic data (FTE files only).
+#' Full demographic and grade-level data is available from 2014 onward.
+#'
+#' @return A list with components:
+#'   \describe{
+#'     \item{min_year}{Integer. The earliest available year (2008).}
+#'     \item{max_year}{Integer. The most recent available year (2025).}
+#'     \item{description}{Character. A description of the data availability.}
+#'   }
+#' @export
+#' @examples
+#' get_available_years()
+#' # Returns list(min_year = 2008, max_year = 2025, description = "...")
+get_available_years <- function() {
+  list(
+    min_year = 2008L,
+    max_year = 2025L,
+    description = "FLDOE enrollment data (2007-08 through 2024-25 school years; 2008-2013 have limited demographics)"
+  )
 }

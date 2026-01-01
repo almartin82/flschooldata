@@ -37,11 +37,11 @@
 #' enr_fresh <- fetch_enr(2024, use_cache = FALSE)
 #'
 #' # Filter to Miami-Dade County (district 13)
-#' miami_dade <- enr_2024 %>%
+#' miami_dade <- enr_2024 |>
 #'   dplyr::filter(district_id == "13")
 #'
 #' # Get state totals
-#' state_totals <- enr_2024 %>%
+#' state_totals <- enr_2024 |>
 #'   dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL")
 #' }
 fetch_enr <- function(end_year, tidy = TRUE, use_cache = TRUE) {
@@ -74,7 +74,7 @@ if (end_year < 2014) {
 
   # Optionally tidy
   if (tidy) {
-    processed <- tidy_enr(processed) %>%
+    processed <- tidy_enr(processed) |>
       id_enr_aggs()
   }
 
@@ -102,13 +102,13 @@ if (end_year < 2014) {
 #' enr_multi <- fetch_enr_multi(2022:2024)
 #'
 #' # Track enrollment trends
-#' enr_multi %>%
-#'   dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") %>%
+#' enr_multi |>
+#'   dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
 #'   dplyr::select(end_year, n_students)
 #'
 #' # Compare Hispanic enrollment growth across years
-#' enr_multi %>%
-#'   dplyr::filter(is_state, subgroup == "hispanic", grade_level == "TOTAL") %>%
+#' enr_multi |>
+#'   dplyr::filter(is_state, subgroup == "hispanic", grade_level == "TOTAL") |>
 #'   dplyr::select(end_year, n_students, pct)
 #' }
 fetch_enr_multi <- function(end_years, tidy = TRUE, use_cache = TRUE) {
