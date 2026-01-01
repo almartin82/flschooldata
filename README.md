@@ -33,6 +33,8 @@ enr %>%
   mutate(change = n_students - lag(n_students))
 ```
 
+![Florida enrollment trend](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/statewide-chart-1.png)
+
 ---
 
 ### 2. Miami-Dade is larger than most states
@@ -48,6 +50,8 @@ enr_2025 %>%
   head(10) %>%
   select(district_name, n_students)
 ```
+
+![Florida top 10 districts](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/top-districts-chart-1.png)
 
 ---
 
@@ -78,6 +82,8 @@ enr_2025 %>%
   select(subgroup, n_students, pct) %>%
   arrange(desc(n_students))
 ```
+
+![Florida student demographics](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/demographics-chart-1.png)
 
 ---
 
@@ -115,6 +121,8 @@ enr %>%
   select(end_year, district_name, n_students) %>%
   tidyr::pivot_wider(names_from = district_name, values_from = n_students)
 ```
+
+![South Florida enrollment decline](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/south-florida-chart-1.png)
 
 ---
 
