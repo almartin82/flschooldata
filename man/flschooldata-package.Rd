@@ -62,6 +62,7 @@ Data is sourced from the Florida Department of Education:
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://almartin82.github.io/flschooldata}
   \item \url{https://github.com/almartin82/flschooldata}
   \item Report bugs at \url{https://github.com/almartin82/flschooldata/issues}
 }

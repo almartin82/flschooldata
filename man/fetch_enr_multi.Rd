@@ -25,13 +25,13 @@ Downloads and combines enrollment data for multiple school years.
 enr_multi <- fetch_enr_multi(2022:2024)
 
 # Track enrollment trends
-enr_multi \%>\%
-  dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") \%>\%
+enr_multi |>
+  dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
   dplyr::select(end_year, n_students)
 
 # Compare Hispanic enrollment growth across years
-enr_multi \%>\%
-  dplyr::filter(is_state, subgroup == "hispanic", grade_level == "TOTAL") \%>\%
+enr_multi |>
+  dplyr::filter(is_state, subgroup == "hispanic", grade_level == "TOTAL") |>
   dplyr::select(end_year, n_students, pct)
 }
 }
