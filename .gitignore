@@ -7,7 +7,6 @@
 # Package files
 *.tar.gz
 *.Rcheck/
-..Rcheck/
 
 # Compiled files
 *.o
