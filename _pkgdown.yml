@@ -8,11 +8,14 @@ template:
   bootstrap: 5
 
 home:
-  links:
-  - text: "10 Insights from Florida Enrollment Data"
-    href: articles/enrollment_hooks.html
-  - text: "Part of the 50 State Schooldata Family"
-    href: https://github.com/almartin82/njschooldata
+  sidebar:
+    structure: [custom_links, license, community, authors, dev]
+    components:
+      custom_links:
+        title: Links
+        text: |
+          - [10 Insights from Florida Enrollment Data](articles/enrollment_hooks.html)
+          - [Part of the 50 State Schooldata Family](https://github.com/almartin82/njschooldata)
 
 articles:
 - title: Key Insights
@@ -28,6 +31,7 @@ navbar:
     github:
       icon: fab fa-github
       href: https://github.com/almartin82/flschooldata
+      aria-label: GitHub repository
 
 reference:
   - title: "Fetch Data"
