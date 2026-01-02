@@ -9,13 +9,7 @@ template:
 
 home:
   sidebar:
-    structure: [custom_links, license, community, authors, dev]
-    components:
-      custom_links:
-        title: Links
-        text: |
-          - [10 Insights from Florida Enrollment Data](articles/enrollment_hooks.html)
-          - [Part of the 50 State Schooldata Family](https://github.com/almartin82/njschooldata)
+    html: pkgdown/sidebar.html
 
 articles:
 - title: Key Insights

@@ -1,33 +1,22 @@
-# TODO: pkgdown Build Issues
+# TODO: Package Improvements
 
-## Current Status
-pkgdown build is failing due to network timeout issues.
+## Completed
 
-## Error Details
+### CRAN/Bioconductor Sidebar Check Timeout (Fixed 2026-01-02)
+- **Problem**: pkgdown's `data_home_sidebar_links` function always calls `cran_link()` which makes HTTP requests to cloud.r-project.org and bioconductor.org, causing timeouts
+- **Root cause**: The function eagerly evaluates ALL default sidebar components even when they're not in the structure
+- **Solution**: Use custom sidebar HTML (`pkgdown/sidebar.html`) which bypasses the default component generation entirely
+- See commit with this fix for details
 
-### Issue 1: CRAN/Bioconductor Sidebar Check Timeout
-- pkgdown attempts to check cloud.r-project.org and bioconductor.org for package availability
-- Default httr2 timeout of 10 seconds is insufficient when network is slow
-- Error: "Timeout was reached [cloud.r-project.org]: Connection timed out after 10001 milliseconds"
+## Open Issues
 
-### Issue 2: FLDOE Data Download Timeout
+### Vignette Data Downloads
 - Vignette `enrollment_hooks.Rmd` dynamically fetches data from FLDOE
-- FLDOE servers (www.fldoe.org) are timing out on data downloads
-- Error: "Failed to download membership data for year 2014"
-
-## Potential Solutions
-
-1. **For CRAN sidebar timeout**: Add to _pkgdown.yml to disable CRAN link:
-   ```yaml
-   home:
-     sidebar:
-       structure: [links, license, community, authors, dev]
-   ```
-
-2. **For vignette data downloads**:
-   - Use pre-computed/cached data in vignettes instead of live fetches
-   - Or increase download timeout in package code
-   - Or add `eval = FALSE` to chunks when network is unavailable
+- If FLDOE servers are slow, vignette build may timeout
+- **Mitigations in place**:
+  - Package uses caching (rappdirs) for downloaded data
+  - httr timeout set to 300 seconds in download functions
+- **If issues occur**: Consider pre-computing vignette data or using knitr caching
 
 ## Date
-2026-01-01
+2026-01-02
