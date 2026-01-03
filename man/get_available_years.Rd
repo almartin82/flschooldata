@@ -10,14 +10,14 @@ get_available_years()
 A list with components:
 \describe{
 \item{min_year}{Integer. The earliest available year (2008).}
-\item{max_year}{Integer. The most recent available year (2025).}
+\item{max_year}{Integer. The most recent available year (2024).}
 \item{description}{Character. A description of the data availability.}
 }
 }
 \description{
 Returns the range of years available from the Florida Department of
 Education (FLDOE). Data is available from the 2007-08 school year
-(end_year = 2008) through 2024-25 (end_year = 2025).
+(end_year = 2008) through 2023-24 (end_year = 2024).
 }
 \details{
 Note: Years 2008-2013 have limited demographic data (FTE files only).
@@ -25,5 +25,5 @@ Full demographic and grade-level data is available from 2014 onward.
 }
 \examples{
 get_available_years()
-# Returns list(min_year = 2008, max_year = 2025, description = "...")
+# Returns list(min_year = 2008, max_year = 2024, description = "...")
 }
