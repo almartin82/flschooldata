@@ -132,13 +132,22 @@ def get_available_years() -> dict:
             }
         # Try rx2 method (R named list)
         if hasattr(r_result, "rx2"):
-            return {
-                "min_year": int(r_result.rx2("min_year")[0]),
-                "max_year": int(r_result.rx2("max_year")[0]),
-            }
+            try:
+                return {
+                    "min_year": int(r_result.rx2("min_year")[0]),
+                    "max_year": int(r_result.rx2("max_year")[0]),
+                }
+            except Exception:
+                pass
         # Try names attribute (some rpy2 versions)
-        if hasattr(r_result, "names") and callable(getattr(r_result, "names", None)):
-            names = list(r_result.names)
+        # Note: names may be a method or property depending on rpy2 version
+        names_attr = getattr(r_result, "names", None)
+        if names_attr is not None:
+            # Get names - call if method, use directly if property
+            if callable(names_attr):
+                names = list(names_attr())
+            else:
+                names = list(names_attr)
             result = {}
             for i, name in enumerate(names):
                 if name in ("min_year", "max_year"):
@@ -146,7 +155,8 @@ def get_available_years() -> dict:
                     if hasattr(val, "__getitem__"):
                         val = val[0]
                     result[name] = int(val)
-            return result
+            if "min_year" in result and "max_year" in result:
+                return result
         # Fallback: try direct attribute access
         return {
             "min_year": int(r_result["min_year"]),
