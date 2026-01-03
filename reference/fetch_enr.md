@@ -53,11 +53,11 @@ enr_wide <- fetch_enr(2024, tidy = FALSE)
 enr_fresh <- fetch_enr(2024, use_cache = FALSE)
 
 # Filter to Miami-Dade County (district 13)
-miami_dade <- enr_2024 %>%
+miami_dade <- enr_2024 |>
   dplyr::filter(district_id == "13")
 
 # Get state totals
-state_totals <- enr_2024 %>%
+state_totals <- enr_2024 |>
   dplyr::filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL")
 } # }
 ```

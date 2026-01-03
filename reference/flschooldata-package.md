@@ -73,6 +73,8 @@ Data is sourced from the Florida Department of Education:
 
 Useful links:
 
+- <https://almartin82.github.io/flschooldata>
+
 - <https://github.com/almartin82/flschooldata>
 
 - Report bugs at <https://github.com/almartin82/flschooldata/issues>
