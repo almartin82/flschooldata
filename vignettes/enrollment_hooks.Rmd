@@ -27,7 +27,7 @@ library(ggplot2)
 theme_set(theme_minimal(base_size = 14))
 ```
 
-This vignette explores Florida's public school enrollment data, surfacing key trends and demographic patterns across 10 years of data (2015-2024).
+This vignette explores Florida's public school enrollment data, surfacing key trends and demographic patterns across recent years (2015-2024).
 
 ---
 

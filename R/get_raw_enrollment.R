@@ -60,6 +60,9 @@ get_raw_enr <- function(end_year) {
 #' Downloads the "Membership by School by Grade by Race/Ethnicity" Excel files
 #' from FLDOE. These provide the most detailed enrollment data.
 #'
+#' The Excel file has 3 sheets: State (summary), District, and School.
+#' Row 1 is a privacy notice, row 2 contains headers.
+#'
 #' @param end_year School year end (2014-2025)
 #' @return List with campus and district data frames
 #' @keywords internal
@@ -124,35 +127,54 @@ download_membership_data <- function(end_year) {
                "\nError:", e$message))
   })
 
-  # Read Excel file - FLDOE files typically have header rows to skip
-  # Try to detect the actual data start
+  # Read the School sheet (campus-level data)
+  # Row 1 is title, row 2 is privacy notice, row 3 is headers
+  # Skip 2 rows so row 3 (headers) becomes column names
   campus_data <- tryCatch({
-    # First try reading with headers
-    df <- readxl::read_excel(tname, sheet = 1, col_types = "text")
+    df <- readxl::read_excel(tname, sheet = "School", skip = 2, col_types = "text")
+    df
+  }, error = function(e) {
+    # Fallback: try reading sheet 1 and detect header row
+    message("  Note: Could not find 'School' sheet, trying sheet 1...")
+    df <- readxl::read_excel(tname, sheet = 1, col_names = FALSE, col_types = "text")
 
-    # Find the header row (look for "District" or "DISTRICT")
+    # Find the header row (look for "District #" or "District")
     header_row <- which(apply(df, 1, function(row) {
-      any(grepl("^District$|^DISTRICT$", row, ignore.case = TRUE))
+      any(grepl("^District.*#$|^District$", row, ignore.case = TRUE))
     }))[1]
 
-    if (!is.na(header_row) && header_row > 1) {
-      # Re-read with proper skip
+    if (!is.na(header_row)) {
+      # Re-read with skip to use header row as column names
       df <- readxl::read_excel(tname, sheet = 1, skip = header_row - 1, col_types = "text")
     }
 
     df
+  })
+
+  # Read the District sheet (district-level data)
+  # Row 1 is title, row 2 is privacy notice, row 3 is headers
+  district_data <- tryCatch({
+    df <- readxl::read_excel(tname, sheet = "District", skip = 2, col_types = "text")
+    df
   }, error = function(e) {
-    # Fallback: try reading without skip
-    readxl::read_excel(tname, sheet = 1, col_types = "text")
+    # Fallback: aggregate from campus data if District sheet not available
+    message("  Note: Could not find 'District' sheet, aggregating from campus data...")
+    NULL
   })
 
   unlink(tname)
 
-  # Standardize column names
+  # Standardize column names for campus data
   names(campus_data) <- standardize_fldoe_colnames(names(campus_data))
 
-  # Create district aggregates from campus data
-  district_data <- aggregate_to_district(campus_data, end_year)
+  # Handle district data
+  if (is.null(district_data)) {
+    # Aggregate from campus data if District sheet wasn't available
+    district_data <- aggregate_to_district(campus_data, end_year)
+  } else {
+    # Standardize column names for district data
+    names(district_data) <- standardize_fldoe_colnames(names(district_data))
+  }
 
   list(
     campus = campus_data,
@@ -259,23 +281,38 @@ download_fte_data <- function(end_year) {
 #' Standardize FLDOE column names
 #'
 #' Converts various FLDOE column name formats to a consistent standard.
+#' FLDOE membership files have paired columns like "District #" (ID) and
+#' "District" (name), which are mapped to DISTRICT_ID and DISTRICT_NAME.
 #'
 #' @param colnames Character vector of column names
 #' @return Character vector of standardized column names
 #' @keywords internal
 standardize_fldoe_colnames <- function(colnames) {
 
-  # Clean up: trim, uppercase, remove special chars
+  # First, handle the special case of "District #" and "School #" BEFORE cleanup
+  # These contain "#" which would be converted to "_" and then stripped
+  colnames <- gsub("^District\\s*#$", "DISTRICT_ID", colnames, ignore.case = TRUE)
+  colnames <- gsub("^School\\s*#$", "SCHOOL_ID", colnames, ignore.case = TRUE)
+
+  # Now handle "District" and "School" (without #) as name columns
+  colnames <- gsub("^District$", "DISTRICT_NAME", colnames, ignore.case = TRUE)
+  colnames <- gsub("^School$", "SCHOOL_NAME", colnames, ignore.case = TRUE)
+
+  # Clean up remaining: trim, uppercase, remove special chars
   colnames <- toupper(trimws(colnames))
   colnames <- gsub("[^A-Z0-9_]", "_", colnames)
   colnames <- gsub("_+", "_", colnames)
   colnames <- gsub("^_|_$", "", colnames)
 
-  # Common mappings
-  colnames <- gsub("^DIST$|^DIST_NO$|^DISTRICT_NUMBER$|^DISTRICT_NO$", "DISTRICT", colnames)
-  colnames <- gsub("^DISTRICT_NAME$|^DISTNAME$", "DISTRICT_NAME", colnames)
-  colnames <- gsub("^SCHOOL$|^SCH$|^SCHOOL_NUMBER$|^SCHOOL_NO$", "SCHOOL", colnames)
-  colnames <- gsub("^SCHOOL_NAME$|^SCHNAME$", "SCHOOL_NAME", colnames)
+  # Common mappings for ID columns
+  colnames <- gsub("^DIST$|^DIST_NO$|^DISTRICT_NUMBER$|^DISTRICT_NO$", "DISTRICT_ID", colnames)
+
+  # Common mappings for name columns
+  colnames <- gsub("^DISTNAME$", "DISTRICT_NAME", colnames)
+  colnames <- gsub("^SCHNAME$", "SCHOOL_NAME", colnames)
+
+  # Handle school ID columns
+  colnames <- gsub("^SCH$|^SCHOOL_NUMBER$|^SCHOOL_NO$", "SCHOOL_ID", colnames)
 
   # Grade columns
   colnames <- gsub("^PK$|^PRE_K$|^PREK$", "GRADE_PK", colnames)
