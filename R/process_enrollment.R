@@ -123,6 +123,8 @@ process_campus_enr <- function(df, end_year) {
   total_col <- find_col(c("TOTAL", "TOT", "MEMBERSHIP", "ENROLLMENT", "TOTAL_MEMBERSHIP"))
   if (!is.null(total_col)) {
     result$row_total <- safe_numeric(df[[total_col]])
+  } else {
+    result$row_total <- rep(NA_real_, n_rows)
   }
 
   # Demographics - Race/Ethnicity
@@ -251,6 +253,8 @@ process_district_enr <- function(df, end_year) {
   total_col <- find_col(c("TOTAL", "TOT", "MEMBERSHIP", "ENROLLMENT", "TOTAL_MEMBERSHIP"))
   if (!is.null(total_col)) {
     result$row_total <- safe_numeric(df[[total_col]])
+  } else {
+    result$row_total <- rep(NA_real_, n_rows)
   }
 
   # Demographics - Race/Ethnicity
