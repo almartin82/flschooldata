@@ -43,9 +43,13 @@ get_raw_enr <- function(end_year) {
     result <- download_fte_data(end_year)
   }
 
-  # Add end_year column to both data frames
-  result$campus$end_year <- end_year
-  result$district$end_year <- end_year
+  # Add end_year column to both data frames (only if they have rows)
+  if (nrow(result$campus) > 0) {
+    result$campus$end_year <- end_year
+  }
+  if (nrow(result$district) > 0) {
+    result$district$end_year <- end_year
+  }
 
   result
 }
