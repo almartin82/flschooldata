@@ -133,7 +133,7 @@ parse_fl_school_id <- function(school_id) {
 #'
 #' Returns the range of years available from the Florida Department of
 #' Education (FLDOE). Data is available from the 2007-08 school year
-#' (end_year = 2008) through 2024-25 (end_year = 2025).
+#' (end_year = 2008) through 2023-24 (end_year = 2024).
 #'
 #' Note: Years 2008-2013 have limited demographic data (FTE files only).
 #' Full demographic and grade-level data is available from 2014 onward.
@@ -141,17 +141,17 @@ parse_fl_school_id <- function(school_id) {
 #' @return A list with components:
 #'   \describe{
 #'     \item{min_year}{Integer. The earliest available year (2008).}
-#'     \item{max_year}{Integer. The most recent available year (2025).}
+#'     \item{max_year}{Integer. The most recent available year (2024).}
 #'     \item{description}{Character. A description of the data availability.}
 #'   }
 #' @export
 #' @examples
 #' get_available_years()
-#' # Returns list(min_year = 2008, max_year = 2025, description = "...")
+#' # Returns list(min_year = 2008, max_year = 2024, description = "...")
 get_available_years <- function() {
   list(
     min_year = 2008L,
-    max_year = 2025L,
-    description = "FLDOE enrollment data (2007-08 through 2024-25 school years; 2008-2013 have limited demographics)"
+    max_year = 2024L,
+    description = "FLDOE enrollment data (2007-08 through 2023-24 school years; 2008-2013 have limited demographics)"
   )
 }
