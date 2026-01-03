@@ -27,7 +27,7 @@ library(ggplot2)
 theme_set(theme_minimal(base_size = 14))
 ```
 
-This vignette explores Florida's public school enrollment data, surfacing key trends and demographic patterns across 17 years of data (2008-2024).
+This vignette explores Florida's public school enrollment data, surfacing key trends and demographic patterns across recent years (2015-2024).
 
 ---
 
@@ -36,7 +36,7 @@ This vignette explores Florida's public school enrollment data, surfacing key tr
 Florida public schools serve nearly 3 million students, trailing only California, Texas, and New York.
 
 ```{r statewide-trend}
-enr <- fetch_enr_multi(2014:2024)
+enr <- fetch_enr_multi(2015:2024)
 
 state_totals <- enr |>
   filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
@@ -53,7 +53,7 @@ ggplot(state_totals, aes(x = end_year, y = n_students)) +
   geom_point(size = 3, color = "#FF6600") +
   scale_y_continuous(labels = scales::comma) +
   labs(
-    title = "Florida Public School Enrollment (2014-2024)",
+    title = "Florida Public School Enrollment (2015-2024)",
     subtitle = "Nearly 3 million students in the Sunshine State",
     x = "School Year (ending)",
     y = "Total Enrollment"
@@ -150,12 +150,12 @@ Orange, Osceola, and Polk counties have been among the fastest-growing, driven b
 central_fl <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
          grepl("Orange|Osceola|Polk", district_name),
-         end_year %in% c(2014, 2024)) |>
+         end_year %in% c(2015, 2024)) |>
   group_by(district_name) |>
   summarize(
-    y2014 = n_students[end_year == 2014],
+    y2015 = n_students[end_year == 2015],
     y2024 = n_students[end_year == 2024],
-    pct_change = round((y2024 / y2014 - 1) * 100, 1),
+    pct_change = round((y2024 / y2015 - 1) * 100, 1),
     .groups = "drop"
   ) |>
   arrange(desc(pct_change))
