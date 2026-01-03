@@ -51,17 +51,33 @@ tidy_enr <- function(df) {
 
   all_subgroups <- c(demo_cols, gender_cols, special_cols)
 
+  # Check if row_total exists for percentage calculations
+  has_row_total <- "row_total" %in% names(df)
+
   # Transform demographic/special subgroups to long format
   if (length(all_subgroups) > 0) {
     tidy_subgroups <- purrr::map_df(
       all_subgroups,
       function(.x) {
-        df |>
+        result <- df |>
           dplyr::rename(n_students = dplyr::all_of(.x)) |>
-          dplyr::select(dplyr::all_of(c(invariants, "n_students", "row_total"))) |>
+          dplyr::select(dplyr::all_of(c(invariants, "n_students")))
+
+        if (has_row_total) {
+          result <- result |>
+            dplyr::mutate(
+              row_total = df$row_total,
+              pct = n_students / row_total
+            ) |>
+            dplyr::select(-row_total)
+        } else {
+          result <- result |>
+            dplyr::mutate(pct = NA_real_)
+        }
+
+        result |>
           dplyr::mutate(
             subgroup = .x,
-            pct = n_students / row_total,
             grade_level = "TOTAL"
           ) |>
           dplyr::select(dplyr::all_of(c(invariants, "grade_level", "subgroup", "n_students", "pct")))
@@ -111,12 +127,25 @@ tidy_enr <- function(df) {
         gl <- grade_level_map[.x]
         if (is.na(gl)) gl <- .x
 
-        df |>
+        result <- df |>
           dplyr::rename(n_students = dplyr::all_of(.x)) |>
-          dplyr::select(dplyr::all_of(c(invariants, "n_students", "row_total"))) |>
+          dplyr::select(dplyr::all_of(c(invariants, "n_students")))
+
+        if (has_row_total) {
+          result <- result |>
+            dplyr::mutate(
+              row_total = df$row_total,
+              pct = n_students / row_total
+            ) |>
+            dplyr::select(-row_total)
+        } else {
+          result <- result |>
+            dplyr::mutate(pct = NA_real_)
+        }
+
+        result |>
           dplyr::mutate(
             subgroup = "total_enrollment",
-            pct = n_students / row_total,
             grade_level = gl
           ) |>
           dplyr::select(dplyr::all_of(c(invariants, "grade_level", "subgroup", "n_students", "pct")))
