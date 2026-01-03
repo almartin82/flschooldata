@@ -89,13 +89,13 @@ process_campus_enr <- function(df, end_year) {
   )
 
   # District ID (2 digits)
-  district_col <- find_col(c("DISTRICT", "DIST", "DIST_NO", "DISTRICT_NUMBER"))
+  district_col <- find_col(c("DISTRICT_ID", "DISTRICT", "DIST", "DIST_NO", "DISTRICT_NUMBER"))
   if (!is.null(district_col)) {
     result$district_id <- sprintf("%02d", as.integer(trimws(df[[district_col]])))
   }
 
   # School ID (4 digits)
-  school_col <- find_col(c("SCHOOL", "SCH", "SCHOOL_NUMBER", "SCHOOL_NO"))
+  school_col <- find_col(c("SCHOOL_ID", "SCHOOL", "SCH", "SCHOOL_NUMBER", "SCHOOL_NO"))
   if (!is.null(school_col)) {
     result$school_num <- sprintf("%04d", as.integer(trimws(df[[school_col]])))
     # Create combined campus_id
@@ -105,12 +105,12 @@ process_campus_enr <- function(df, end_year) {
   }
 
   # Names
-  school_name_col <- find_col(c("SCHOOL_NAME", "SCHNAME", "NAME"))
+  school_name_col <- find_col(c("SCHOOL_NAME", "SCHNAME", "NAME", "SCHOOL"))
   if (!is.null(school_name_col)) {
     result$campus_name <- trimws(df[[school_name_col]])
   }
 
-  district_name_col <- find_col(c("DISTRICT_NAME", "DISTNAME"))
+  district_name_col <- find_col(c("DISTRICT_NAME", "DISTNAME", "DISTRICT"))
   if (!is.null(district_name_col)) {
     result$district_name <- trimws(df[[district_name_col]])
   } else if (!is.null(district_col)) {
@@ -119,21 +119,14 @@ process_campus_enr <- function(df, end_year) {
     result$district_name <- dist_names[result$district_id]
   }
 
-  # Total enrollment
-  total_col <- find_col(c("TOTAL", "TOT", "MEMBERSHIP", "ENROLLMENT", "TOTAL_MEMBERSHIP"))
-  if (!is.null(total_col)) {
-    result$row_total <- safe_numeric(df[[total_col]])
-  } else {
-    result$row_total <- rep(NA_real_, n_rows)
-  }
-
-  # Demographics - Race/Ethnicity
+  # Demographics - Race/Ethnicity (process before row_total to calculate if needed)
+  # Note: FLDOE uses longer column names like "BLACK_OR_AFRICAN_AMERICAN"
   demo_map <- list(
     white = c("WHITE", "W", "WHITE_TOTAL"),
-    black = c("BLACK", "B", "BLACK_TOTAL", "AFRICAN_AMERICAN"),
-    hispanic = c("HISPANIC", "H", "HISP", "HISPANIC_TOTAL"),
+    black = c("BLACK_OR_AFRICAN_AMERICAN", "BLACK", "B", "BLACK_TOTAL", "AFRICAN_AMERICAN"),
+    hispanic = c("HISPANIC_LATINO", "HISPANIC", "H", "HISP", "HISPANIC_TOTAL"),
     asian = c("ASIAN", "A", "ASIAN_TOTAL"),
-    pacific_islander = c("PACIFIC_ISLANDER", "P", "PACIFIC", "HAWAIIAN_PACIFIC"),
+    pacific_islander = c("NATIVE_HAWAIIAN_OR_OTHER_PACIFIC_ISLANDER", "PACIFIC_ISLANDER", "P", "PACIFIC", "HAWAIIAN_PACIFIC"),
     native_american = c("NATIVE_AMERICAN", "I", "AMERICAN_INDIAN", "INDIAN"),
     multiracial = c("MULTIRACIAL", "M", "TWO_OR_MORE", "MULTI")
   )
@@ -142,6 +135,20 @@ process_campus_enr <- function(df, end_year) {
     col <- find_col(demo_map[[name]])
     if (!is.null(col)) {
       result[[name]] <- safe_numeric(df[[col]])
+    }
+  }
+
+  # Total enrollment - try explicit column first, then calculate from demographics
+  total_col <- find_col(c("TOTAL", "TOT", "MEMBERSHIP", "ENROLLMENT", "TOTAL_MEMBERSHIP"))
+  if (!is.null(total_col)) {
+    result$row_total <- safe_numeric(df[[total_col]])
+  } else {
+    # Calculate row_total from demographics (sum of race columns)
+    demo_cols <- intersect(names(demo_map), names(result))
+    if (length(demo_cols) > 0) {
+      result$row_total <- rowSums(result[, demo_cols, drop = FALSE], na.rm = TRUE)
+    } else {
+      result$row_total <- rep(NA_real_, n_rows)
     }
   }
 
@@ -229,7 +236,7 @@ process_district_enr <- function(df, end_year) {
   )
 
   # District ID
-  district_col <- find_col(c("DISTRICT", "DIST", "DIST_NO", "DISTRICT_NUMBER"))
+  district_col <- find_col(c("DISTRICT_ID", "DISTRICT", "DIST", "DIST_NO", "DISTRICT_NUMBER"))
   if (!is.null(district_col)) {
     result$district_id <- sprintf("%02d", as.integer(trimws(df[[district_col]])))
   }
@@ -238,7 +245,7 @@ process_district_enr <- function(df, end_year) {
   result$campus_id <- rep(NA_character_, n_rows)
 
   # Names
-  district_name_col <- find_col(c("DISTRICT_NAME", "DISTNAME"))
+  district_name_col <- find_col(c("DISTRICT_NAME", "DISTNAME", "DISTRICT"))
   if (!is.null(district_name_col)) {
     result$district_name <- trimws(df[[district_name_col]])
   } else if (!is.null(district_col)) {
@@ -249,21 +256,14 @@ process_district_enr <- function(df, end_year) {
 
   result$campus_name <- rep(NA_character_, n_rows)
 
-  # Total enrollment
-  total_col <- find_col(c("TOTAL", "TOT", "MEMBERSHIP", "ENROLLMENT", "TOTAL_MEMBERSHIP"))
-  if (!is.null(total_col)) {
-    result$row_total <- safe_numeric(df[[total_col]])
-  } else {
-    result$row_total <- rep(NA_real_, n_rows)
-  }
-
-  # Demographics - Race/Ethnicity
+  # Demographics - Race/Ethnicity (process before row_total to calculate if needed)
+  # Note: FLDOE uses longer column names like "BLACK_OR_AFRICAN_AMERICAN"
   demo_map <- list(
     white = c("WHITE", "W", "WHITE_TOTAL"),
-    black = c("BLACK", "B", "BLACK_TOTAL", "AFRICAN_AMERICAN"),
-    hispanic = c("HISPANIC", "H", "HISP", "HISPANIC_TOTAL"),
+    black = c("BLACK_OR_AFRICAN_AMERICAN", "BLACK", "B", "BLACK_TOTAL", "AFRICAN_AMERICAN"),
+    hispanic = c("HISPANIC_LATINO", "HISPANIC", "H", "HISP", "HISPANIC_TOTAL"),
     asian = c("ASIAN", "A", "ASIAN_TOTAL"),
-    pacific_islander = c("PACIFIC_ISLANDER", "P", "PACIFIC", "HAWAIIAN_PACIFIC"),
+    pacific_islander = c("NATIVE_HAWAIIAN_OR_OTHER_PACIFIC_ISLANDER", "PACIFIC_ISLANDER", "P", "PACIFIC", "HAWAIIAN_PACIFIC"),
     native_american = c("NATIVE_AMERICAN", "I", "AMERICAN_INDIAN", "INDIAN"),
     multiracial = c("MULTIRACIAL", "M", "TWO_OR_MORE", "MULTI")
   )
@@ -272,6 +272,20 @@ process_district_enr <- function(df, end_year) {
     col <- find_col(demo_map[[name]])
     if (!is.null(col)) {
       result[[name]] <- safe_numeric(df[[col]])
+    }
+  }
+
+  # Total enrollment - try explicit column first, then calculate from demographics
+  total_col <- find_col(c("TOTAL", "TOT", "MEMBERSHIP", "ENROLLMENT", "TOTAL_MEMBERSHIP"))
+  if (!is.null(total_col)) {
+    result$row_total <- safe_numeric(df[[total_col]])
+  } else {
+    # Calculate row_total from demographics (sum of race columns)
+    demo_cols <- intersect(names(demo_map), names(result))
+    if (length(demo_cols) > 0) {
+      result$row_total <- rowSums(result[, demo_cols, drop = FALSE], na.rm = TRUE)
+    } else {
+      result$row_total <- rep(NA_real_, n_rows)
     }
   }
 

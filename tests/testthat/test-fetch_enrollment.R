@@ -46,18 +46,18 @@ test_that("get_fl_district_names returns all 67 counties plus special districts"
   # Should have 67 counties plus some special districts
   expect_true(length(names) >= 67)
 
-  # Check specific counties
-  expect_equal(names["01"], "Alachua")
-  expect_equal(names["13"], "Miami-Dade")
-  expect_equal(names["16"], "Duval")
-  expect_equal(names["29"], "Hillsborough")
-  expect_equal(names["48"], "Orange")
-  expect_equal(names["50"], "Palm Beach")
-  expect_equal(names["52"], "Pinellas")
-  expect_equal(names["06"], "Broward")
+  # Check specific counties (use unname() because named vector elements include names)
+  expect_equal(unname(names["01"]), "Alachua")
+  expect_equal(unname(names["13"]), "Miami-Dade")
+  expect_equal(unname(names["16"]), "Duval")
+  expect_equal(unname(names["29"]), "Hillsborough")
+  expect_equal(unname(names["48"]), "Orange")
+  expect_equal(unname(names["50"]), "Palm Beach")
+  expect_equal(unname(names["52"]), "Pinellas")
+  expect_equal(unname(names["06"]), "Broward")
 
   # Check special districts
-  expect_equal(names["71"], "FL School for Deaf/Blind")
+  expect_equal(unname(names["71"]), "FL School for Deaf/Blind")
 })
 
 test_that("format_fl_school_id creates correct format", {
@@ -79,11 +79,15 @@ test_that("parse_fl_school_id extracts components correctly", {
 
 test_that("standardize_fldoe_colnames handles various formats", {
   # Test basic standardization
+  # "District" (standalone) -> DISTRICT_NAME
+  # "DIST_NO" -> DISTRICT_ID
+  # "School" (standalone) -> SCHOOL_NAME
   cols <- c("District", "DIST_NO", "School", "PK", "KG", "White", "TOTAL")
   result <- standardize_fldoe_colnames(cols)
 
-  expect_true("DISTRICT" %in% result)
-  expect_true("SCHOOL" %in% result)
+  expect_true("DISTRICT_NAME" %in% result)
+  expect_true("DISTRICT_ID" %in% result)
+  expect_true("SCHOOL_NAME" %in% result)
   expect_true("GRADE_PK" %in% result)
   expect_true("GRADE_K" %in% result)
   expect_true("WHITE" %in% result)
@@ -171,7 +175,9 @@ test_that("Florida has approximately 67-75 districts", {
   # Filter to district rows only
   districts <- result[result$type == "District", ]
 
+  # Count unique districts (not rows - there are multiple rows per district, one per grade)
   # Florida has 67 county districts plus 4-5 special districts (lab schools, deaf/blind)
-  n_districts <- nrow(districts)
-  expect_true(n_districts >= 67 && n_districts <= 80)
+  n_districts <- length(unique(districts$district_id))
+  expect_true(n_districts >= 67 && n_districts <= 80,
+              info = paste("Found", n_districts, "unique districts"))
 })
