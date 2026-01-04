@@ -10,3 +10,5 @@
 ^CLAUDE\.md$
 ^PRD\.md$
 ^py.*schooldata$
+^doc$
+^Meta$

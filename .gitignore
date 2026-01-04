@@ -21,5 +21,9 @@
 # pkgdown
 docs/
 
+# Vignette build artifacts
+doc/
+Meta/
+
 # macOS
 .DS_Store
