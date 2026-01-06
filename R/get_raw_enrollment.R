@@ -128,33 +128,61 @@ download_membership_data <- function(end_year) {
   })
 
   # Read the School sheet (campus-level data)
-  # Row 1 is title, row 2 is privacy notice, row 3 is headers
-  # Skip 2 rows so row 3 (headers) becomes column names
+  # Format varies by year - detect header row automatically
   campus_data <- tryCatch({
-    df <- readxl::read_excel(tname, sheet = "School", skip = 2, col_types = "text")
+    # First read with no headers to detect where the actual data starts
+    df_detect <- readxl::read_excel(tname, sheet = "School", col_names = FALSE, col_types = "text", .name_repair = "minimal")
+
+    # Find the header row (look for "District #" AND "Grade" together)
+    header_row <- which(apply(df_detect, 1, function(row) {
+      any(grepl("District.*#|Dist.*#", row, ignore.case = TRUE)) &&
+      any(grepl("^Grade$", row, ignore.case = TRUE))
+    }))[1]
+
+    if (is.na(header_row)) {
+      stop("Could not find header row in School sheet")
+    }
+
+    # Now read with correct skip value (header_row - 1 because skip = N skips N rows before reading)
+    df <- readxl::read_excel(tname, sheet = "School", skip = header_row - 1, col_types = "text")
     df
   }, error = function(e) {
     # Fallback: try reading sheet 1 and detect header row
     message("  Note: Could not find 'School' sheet, trying sheet 1...")
-    df <- readxl::read_excel(tname, sheet = 1, col_names = FALSE, col_types = "text")
+    df_detect <- readxl::read_excel(tname, sheet = 1, col_names = FALSE, col_types = "text", .name_repair = "minimal")
 
-    # Find the header row (look for "District #" or "District")
-    header_row <- which(apply(df, 1, function(row) {
-      any(grepl("^District.*#$|^District$", row, ignore.case = TRUE))
+    header_row <- which(apply(df_detect, 1, function(row) {
+      any(grepl("District.*#|Dist.*#", row, ignore.case = TRUE)) &&
+      any(grepl("^Grade$", row, ignore.case = TRUE))
     }))[1]
 
     if (!is.na(header_row)) {
-      # Re-read with skip to use header row as column names
       df <- readxl::read_excel(tname, sheet = 1, skip = header_row - 1, col_types = "text")
+    } else {
+      df <- df_detect
     }
 
     df
   })
 
   # Read the District sheet (district-level data)
-  # Row 1 is title, row 2 is privacy notice, row 3 is headers
+  # Format varies by year - detect header row automatically
   district_data <- tryCatch({
-    df <- readxl::read_excel(tname, sheet = "District", skip = 2, col_types = "text")
+    # First read with no headers to detect where the actual data starts
+    df_detect <- readxl::read_excel(tname, sheet = "District", col_names = FALSE, col_types = "text", .name_repair = "minimal")
+
+    # Find the header row (look for "District #" AND "Grade" together)
+    header_row <- which(apply(df_detect, 1, function(row) {
+      any(grepl("District.*#|Dist.*#", row, ignore.case = TRUE)) &&
+      any(grepl("^Grade$", row, ignore.case = TRUE))
+    }))[1]
+
+    if (is.na(header_row)) {
+      stop("Could not find header row in District sheet")
+    }
+
+    # Now read with correct skip value
+    df <- readxl::read_excel(tname, sheet = "District", skip = header_row - 1, col_types = "text")
     df
   }, error = function(e) {
     # Fallback: aggregate from campus data if District sheet not available
@@ -289,10 +317,12 @@ download_fte_data <- function(end_year) {
 #' @keywords internal
 standardize_fldoe_colnames <- function(colnames) {
 
-  # First, handle the special case of "District #" and "School #" BEFORE cleanup
+  # First, handle the special case of "District #", "Dist #", "School #", "Schl #" BEFORE cleanup
   # These contain "#" which would be converted to "_" and then stripped
-  colnames <- gsub("^District\\s*#$", "DISTRICT_ID", colnames, ignore.case = TRUE)
-  colnames <- gsub("^School\\s*#$", "SCHOOL_ID", colnames, ignore.case = TRUE)
+  colnames <- gsub("^Dist[[:space:]]*#$", "DISTRICT_ID", colnames, ignore.case = TRUE)
+  colnames <- gsub("^District[[:space:]]*#$", "DISTRICT_ID", colnames, ignore.case = TRUE)
+  colnames <- gsub("^Schl[[:space:]]*#$", "SCHOOL_ID", colnames, ignore.case = TRUE)
+  colnames <- gsub("^School[[:space:]]*#$", "SCHOOL_ID", colnames, ignore.case = TRUE)
 
   # Now handle "District" and "School" (without #) as name columns
   colnames <- gsub("^District$", "DISTRICT_NAME", colnames, ignore.case = TRUE)

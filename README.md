@@ -9,13 +9,13 @@
 
 Fetch and analyze Florida school enrollment data from the Florida Department of Education (FLDOE) in R or Python.
 
-**[Documentation](https://almartin82.github.io/flschooldata/)** | **[10 Key Insights](https://almartin82.github.io/flschooldata/articles/enrollment_hooks.html)** | **[Getting Started](https://almartin82.github.io/flschooldata/articles/quickstart.html)**
+**[Documentation](https://almartin82.github.io/flschooldata/)** | **[15 Key Insights](https://almartin82.github.io/flschooldata/articles/enrollment_hooks.html)** | **[Getting Started](https://almartin82.github.io/flschooldata/articles/quickstart.html)**
 
 ## What can you find with flschooldata?
 
-> **See the full analysis with charts and data output:** [10 Insights from Florida Enrollment Data](https://almartin82.github.io/flschooldata/articles/enrollment_hooks.html)
+> **See the full analysis with charts and data output:** [15 Insights from Florida Enrollment Data](https://almartin82.github.io/flschooldata/articles/enrollment_hooks.html)
 
-**18 years of enrollment data (2008-2025).** 2.9 million students across 67 county districts in the Sunshine State. Here are ten stories hiding in the numbers:
+**18 years of enrollment data (2008-2025).** 2.9 million students across 67 county districts in the Sunshine State. Here are fifteen stories hiding in the numbers:
 
 ---
 
@@ -185,6 +185,112 @@ enr_2025 %>%
     avg_per_district = round(mean(n_students, na.rm = TRUE))
   )
 ```
+
+---
+
+### 11. Tampa Bay is catching up to South Florida
+
+Hillsborough, Pinellas, and Pasco counties represent Florida's other major metro area. While South Florida declines, Tampa Bay has held steady or grown.
+
+```r
+enr <- fetch_enr_multi(2015:2025)
+
+enr %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Hillsborough|Pinellas|Pasco", district_name)) %>%
+  group_by(district_name) %>%
+  summarize(
+    y2015 = n_students[end_year == 2015],
+    y2025 = n_students[end_year == 2025],
+    pct_change = round((y2025 / y2015 - 1) * 100, 1)
+  ) %>%
+  arrange(desc(y2025))
+```
+
+![Tampa Bay enrollment](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/tampa-bay-chart-1.png)
+
+---
+
+### 12. Jacksonville is Florida's hidden giant
+
+Duval County (Jacksonville) often flies under the radar, but it's Florida's 6th largest district with over 125,000 students.
+
+```r
+enr <- fetch_enr_multi(2015:2025)
+
+enr %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Duval", district_name)) %>%
+  select(end_year, district_name, n_students) %>%
+  mutate(change = n_students - lag(n_students))
+```
+
+![Jacksonville enrollment](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/jacksonville-chart-1.png)
+
+---
+
+### 13. Hispanic enrollment surpassed White for the first time
+
+A demographic milestone: Hispanic student enrollment has overtaken White enrollment in Florida, reflecting the state's changing population.
+
+```r
+enr <- fetch_enr_multi(2015:2025)
+
+enr %>%
+  filter(is_state, grade_level == "TOTAL",
+         subgroup %in% c("hispanic", "white")) %>%
+  select(end_year, subgroup, n_students) %>%
+  tidyr::pivot_wider(names_from = subgroup, values_from = n_students)
+```
+
+![Hispanic-White crossover](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/hispanic-white-crossover-chart-1.png)
+
+---
+
+### 14. Small rural counties face steep declines
+
+While large metros grow, many of Florida's smallest counties are losing students rapidly, often by double-digit percentages.
+
+```r
+enr <- fetch_enr_multi(2015:2025)
+
+enr %>%
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         end_year %in% c(2015, 2025)) %>%
+  group_by(district_name) %>%
+  summarize(
+    y2015 = n_students[end_year == 2015],
+    y2025 = n_students[end_year == 2025],
+    pct_change = round((y2025 / y2015 - 1) * 100, 1)
+  ) %>%
+  arrange(pct_change) %>%
+  head(10)
+```
+
+![Rural county decline](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/rural-decline-chart-1.png)
+
+---
+
+### 15. Asian students are the fastest-growing demographic
+
+While Hispanic students are the largest group, Asian student enrollment has grown at the highest rate percentage-wise since 2015.
+
+```r
+enr <- fetch_enr_multi(2015:2025)
+
+enr %>%
+  filter(is_state, grade_level == "TOTAL",
+         subgroup %in% c("hispanic", "white", "black", "asian", "multiracial")) %>%
+  group_by(subgroup) %>%
+  summarize(
+    y2015 = n_students[end_year == 2015],
+    y2025 = n_students[end_year == 2025],
+    pct_change = round((y2025 / y2015 - 1) * 100, 1)
+  ) %>%
+  arrange(desc(pct_change))
+```
+
+![Demographic growth trends](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/asian-growth-chart-1.png)
 
 ---
 

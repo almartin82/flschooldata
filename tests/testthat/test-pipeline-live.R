@@ -452,13 +452,19 @@ test_that("Raw data matches processed totals", {
   # Get processed data
   processed <- fetch_enr(2024, tidy = FALSE, use_cache = FALSE)
 
-  # Campus counts should match
+  # Campus counts: raw has multiple rows per school (one per grade)
+  # Processed aggregates to one row per school
+  # So processed rows should be roughly raw rows / average grades per school
   raw_campus_rows <- nrow(raw$campus)
   processed_campus_rows <- nrow(processed[processed$type == "Campus", ])
 
-  # Should be close (some filtering for invalid rows may occur)
-  expect_true(abs(raw_campus_rows - processed_campus_rows) / raw_campus_rows < 0.01,
-              label = paste("Raw:", raw_campus_rows, "Processed:", processed_campus_rows))
+  # For Florida, not all schools have all grade levels
+  # Elementary schools (K-5), middle schools (6-8), high schools (9-12), etc.
+  # Average is around 6 grade levels per school
+  ratio <- raw_campus_rows / processed_campus_rows
+  expect_true(ratio > 3 && ratio < 15,
+              label = paste("Ratio raw/processed:", round(ratio, 1),
+                            "Raw:", raw_campus_rows, "Processed:", processed_campus_rows))
 })
 
 # ==============================================================================

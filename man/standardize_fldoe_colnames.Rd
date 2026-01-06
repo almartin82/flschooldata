@@ -14,5 +14,7 @@ Character vector of standardized column names
 }
 \description{
 Converts various FLDOE column name formats to a consistent standard.
+FLDOE membership files have paired columns like "District #" (ID) and
+"District" (name), which are mapped to DISTRICT_ID and DISTRICT_NAME.
 }
 \keyword{internal}
