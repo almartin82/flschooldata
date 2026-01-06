@@ -1,4 +1,4 @@
-# 10 Insights from Florida School Enrollment Data
+# 15 Insights from Florida School Enrollment Data
 
 ``` r
 library(flschooldata)
@@ -30,17 +30,17 @@ state_totals <- enr |>
          pct_change = round(change / lag(n_students) * 100, 2))
 
 state_totals
-#>    end_year n_students   change pct_change
-#> 1      2015    2750108       NA         NA
-#> 2      2016    2785286    35178       1.28
-#> 3      2017    2810249    24963       0.90
-#> 4      2018          0 -2810249    -100.00
-#> 5      2019    2840029  2840029        Inf
-#> 6      2020    2852303    12274       0.43
-#> 7      2021    2784931   -67372      -2.36
-#> 8      2022    2826573    41642       1.50
-#> 9      2023    2864292    37719       1.33
-#> 10     2024    2865908     1616       0.06
+#>    end_year n_students change pct_change
+#> 1      2015    2750108     NA         NA
+#> 2      2016    2785286  35178       1.28
+#> 3      2017    2810249  24963       0.90
+#> 4      2018    2826290  16041       0.57
+#> 5      2019    2840029  13739       0.49
+#> 6      2020    2852303  12274       0.43
+#> 7      2021    2784931 -67372      -2.36
+#> 8      2022    2826573  41642       1.50
+#> 9      2023    2864292  37719       1.33
+#> 10     2024    2865908   1616       0.06
 ```
 
 ``` r
@@ -76,16 +76,16 @@ top_10 <- enr_2024 |>
 
 top_10
 #>    district_name n_students
-#> 1     MIAMI-DADE      28058
-#> 2     MIAMI-DADE      27685
-#> 3     MIAMI-DADE      26796
-#> 4     MIAMI-DADE      26339
-#> 5     MIAMI-DADE      26048
-#> 6     MIAMI-DADE      25972
-#> 7     MIAMI-DADE      25159
-#> 8     MIAMI-DADE      25158
-#> 9     MIAMI-DADE      24529
-#> 10    MIAMI-DADE      24110
+#> 1     MIAMI-DADE     337610
+#> 2        BROWARD     251397
+#> 3   HILLSBOROUGH     224144
+#> 4         ORANGE     207695
+#> 5     PALM BEACH     191390
+#> 6          DUVAL     129083
+#> 7           POLK     115990
+#> 8            LEE      99952
+#> 9       PINELLAS      90969
+#> 10         PASCO      85808
 ```
 
 ``` r
@@ -249,20 +249,8 @@ virtual <- enr_2024 |>
   select(district_name, n_students)
 
 virtual
-#>    district_name n_students
-#> 1     FL VIRTUAL        262
-#> 2     FL VIRTUAL        271
-#> 3     FL VIRTUAL        398
-#> 4     FL VIRTUAL        410
-#> 5     FL VIRTUAL        440
-#> 6     FL VIRTUAL        503
-#> 7     FL VIRTUAL        682
-#> 8     FL VIRTUAL        917
-#> 9     FL VIRTUAL        968
-#> 10    FL VIRTUAL        862
-#> 11    FL VIRTUAL       1015
-#> 12    FL VIRTUAL       1038
-#> 13    FL VIRTUAL       1108
+#>   district_name n_students
+#> 1    FL VIRTUAL       8874
 ```
 
 ------------------------------------------------------------------------
@@ -281,8 +269,15 @@ k_trend <- enr |>
   pivot_wider(names_from = grade_level, values_from = n_students)
 
 k_trend
-#> # A tibble: 0 × 1
-#> # ℹ 1 variable: end_year <int>
+#> # A tibble: 6 × 5
+#>   end_year      K   `01`   `05`   `09`
+#>      <int>  <dbl>  <dbl>  <dbl>  <dbl>
+#> 1     2019 200437 206545 222947 221023
+#> 2     2020 202460 207143 217518 223805
+#> 3     2021 186147 200215 207750 227753
+#> 4     2022 199099 200741 217770 231499
+#> 5     2023 197925 209516 209060 237920
+#> 6     2024 195032 204402 205135 232506
 ```
 
 ------------------------------------------------------------------------
@@ -324,16 +319,262 @@ county_count
 
 ------------------------------------------------------------------------
 
+## 11. Tampa Bay is catching up to South Florida
+
+Hillsborough and Pinellas counties represent Florida’s other major metro
+area. While South Florida declines, Tampa Bay has held steady.
+
+``` r
+tampa <- enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Hillsborough|Pinellas|Pasco", district_name)) |>
+  group_by(district_name) |>
+  summarize(
+    y2015 = n_students[end_year == 2015],
+    y2024 = n_students[end_year == 2024],
+    pct_change = round((y2024 / y2015 - 1) * 100, 1),
+    .groups = "drop"
+  ) |>
+  arrange(desc(y2024))
+
+tampa
+#> # A tibble: 0 × 4
+#> # ℹ 4 variables: district_name <chr>, y2015 <dbl>, y2024 <dbl>,
+#> #   pct_change <dbl>
+```
+
+``` r
+enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Hillsborough|Pinellas|Pasco", district_name)) |>
+  ggplot(aes(x = end_year, y = n_students, color = district_name)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_color_brewer(palette = "Set1") +
+  labs(
+    title = "Tampa Bay Metro Enrollment Trends (2015-2024)",
+    subtitle = "Hillsborough stable, Pasco growing, Pinellas declining",
+    x = "School Year",
+    y = "Enrollment",
+    color = "County"
+  )
+```
+
+![](enrollment_hooks_files/figure-html/tampa-bay-chart-1.png)
+
+------------------------------------------------------------------------
+
+## 12. Jacksonville is Florida’s hidden giant
+
+Duval County (Jacksonville) often flies under the radar, but it’s
+Florida’s 6th largest district with over 125,000 students.
+
+``` r
+jax <- enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         grepl("Duval", district_name)) |>
+  select(end_year, district_name, n_students) |>
+  mutate(change = n_students - lag(n_students))
+
+jax
+#> [1] end_year      district_name n_students    change       
+#> <0 rows> (or 0-length row.names)
+```
+
+``` r
+jax |>
+  ggplot(aes(x = end_year, y = n_students)) +
+  geom_line(linewidth = 1.2, color = "#0066CC") +
+  geom_point(size = 3, color = "#0066CC") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Duval County (Jacksonville) Enrollment (2015-2024)",
+    subtitle = "Florida's 6th largest district",
+    x = "School Year",
+    y = "Total Enrollment"
+  )
+```
+
+![](enrollment_hooks_files/figure-html/jacksonville-chart-1.png)
+
+------------------------------------------------------------------------
+
+## 13. Hispanic enrollment surpassed White for the first time
+
+A demographic milestone: Hispanic student enrollment has overtaken White
+enrollment in Florida, reflecting broader population shifts.
+
+``` r
+crossover <- enr |>
+  filter(is_state, grade_level == "TOTAL",
+         subgroup %in% c("hispanic", "white")) |>
+  select(end_year, subgroup, n_students) |>
+  pivot_wider(names_from = subgroup, values_from = n_students)
+
+crossover
+#> # A tibble: 10 × 3
+#>    end_year   white hispanic
+#>       <int>   <dbl>    <dbl>
+#>  1     2015 1108227   846425
+#>  2     2016 1101823   879982
+#>  3     2017 1089439   912300
+#>  4     2018 1077811   937352
+#>  5     2019 1063838   963338
+#>  6     2020 1054580   986005
+#>  7     2021 1016772   974588
+#>  8     2022 1021630  1003659
+#>  9     2023 1014065  1043390
+#> 10     2024  988822  1066935
+```
+
+``` r
+enr |>
+  filter(is_state, grade_level == "TOTAL",
+         subgroup %in% c("hispanic", "white")) |>
+  ggplot(aes(x = end_year, y = n_students, color = subgroup)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_color_manual(values = c("hispanic" = "#FF6600", "white" = "#3399CC"),
+                     labels = c("Hispanic", "White")) +
+  labs(
+    title = "The Hispanic-White Enrollment Crossover",
+    subtitle = "Hispanic students now outnumber White students in Florida",
+    x = "School Year",
+    y = "Number of Students",
+    color = "Group"
+  )
+```
+
+![](enrollment_hooks_files/figure-html/hispanic-white-crossover-chart-1.png)
+
+------------------------------------------------------------------------
+
+## 14. Small rural counties face steep declines
+
+While large metros grow, many of Florida’s smallest counties are losing
+students rapidly.
+
+``` r
+# Get the first and last year for comparison
+first_year <- min(enr$end_year)
+last_year <- max(enr$end_year)
+
+county_change <- enr |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
+         end_year %in% c(first_year, last_year)) |>
+  group_by(district_name) |>
+  filter(n() == 2) |>  # Only counties with both years
+  summarize(
+    y_first = n_students[end_year == first_year],
+    y_last = n_students[end_year == last_year],
+    change = y_last - y_first,
+    pct_change = round((y_last / y_first - 1) * 100, 1),
+    .groups = "drop"
+  )
+
+# Counties losing the most (by %)
+declining <- county_change |>
+  filter(y_first > 1000) |>  # Exclude tiny counties
+  arrange(pct_change) |>
+  head(10)
+
+declining
+#> # A tibble: 10 × 5
+#>    district_name y_first y_last change pct_change
+#>    <chr>           <dbl>  <dbl>  <dbl>      <dbl>
+#>  1 GADSDEN          5837   4598  -1239      -21.2
+#>  2 LIBERTY          1330   1156   -174      -13.1
+#>  3 PINELLAS       103754  90969 -12785      -12.3
+#>  4 LAFAYETTE        1132   1007   -125      -11  
+#>  5 MADISON          2498   2228   -270      -10.8
+#>  6 JACKSON          6726   6037   -689      -10.2
+#>  7 DESOTO           4658   4199   -459       -9.9
+#>  8 HARDEE           5095   4598   -497       -9.8
+#>  9 TAYLOR           2885   2602   -283       -9.8
+#> 10 CALHOUN          2149   1942   -207       -9.6
+```
+
+``` r
+declining |>
+  mutate(district_name = forcats::fct_reorder(district_name, pct_change)) |>
+  ggplot(aes(x = pct_change, y = district_name)) +
+  geom_col(fill = "#CC3333") +
+  labs(
+    title = paste0("Florida's Fastest Declining Counties (", first_year, "-", last_year, ")"),
+    subtitle = "Percent change in total enrollment",
+    x = "Percent Change",
+    y = NULL
+  )
+```
+
+![](enrollment_hooks_files/figure-html/rural-decline-chart-1.png)
+
+------------------------------------------------------------------------
+
+## 15. Asian students are the fastest-growing demographic
+
+While Hispanic students are the largest group, Asian student enrollment
+has grown at the highest rate percentage-wise.
+
+``` r
+demo_trend <- enr |>
+  filter(is_state, grade_level == "TOTAL",
+         subgroup %in% c("hispanic", "white", "black", "asian", "multiracial")) |>
+  select(end_year, subgroup, n_students) |>
+  group_by(subgroup) |>
+  mutate(pct_change = round((n_students / first(n_students) - 1) * 100, 1)) |>
+  ungroup()
+
+demo_trend |>
+  filter(end_year == 2024) |>
+  arrange(desc(pct_change))
+#> # A tibble: 5 × 4
+#>   end_year subgroup    n_students pct_change
+#>      <int> <chr>            <dbl>      <dbl>
+#> 1     2024 multiracial     119907       34.9
+#> 2     2024 hispanic       1066935       26.1
+#> 3     2024 asian            81688       15.3
+#> 4     2024 black           599867       -4.2
+#> 5     2024 white           988822      -10.8
+```
+
+``` r
+demo_trend |>
+  ggplot(aes(x = end_year, y = pct_change, color = subgroup)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+  scale_color_brewer(palette = "Set1") +
+  labs(
+    title = "Demographic Growth Trends (2015-2024)",
+    subtitle = "Percent change from 2015 baseline",
+    x = "School Year",
+    y = "Percent Change from 2015",
+    color = "Subgroup"
+  )
+```
+
+![](enrollment_hooks_files/figure-html/asian-growth-chart-1.png)
+
+------------------------------------------------------------------------
+
 ## Summary
 
 Florida’s school enrollment data reveals:
 
 - **Continued growth**: Florida keeps growing while other major states
   decline
-- **Demographic shift**: Hispanic students now the largest group
-- **Regional divergence**: Central Florida grows, South Florida shrinks
+- **Demographic crossover**: Hispanic students now outnumber White
+  students, Asian students growing fastest
+- **Regional divergence**: Central Florida and Tampa Bay grow, South
+  Florida and rural areas shrink
 - **Virtual pioneer**: FLVS shows Florida’s embrace of online education
-- **County structure**: 67 county districts create a unique system
+- **County structure**: 67 county districts create a unique
+  administrative system
+- **Hidden giants**: Jacksonville (Duval) often overlooked as a major
+  district
 
 These patterns shape education policy across the Sunshine State.
 

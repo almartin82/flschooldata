@@ -18,3 +18,8 @@ download_membership_data(end_year)
 ## Value
 
 List with campus and district data frames
+
+## Details
+
+The Excel file has 3 sheets: State (summary), District, and School. Row
+1 is a privacy notice, row 2 contains headers.
