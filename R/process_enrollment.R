@@ -194,24 +194,40 @@ process_campus_enr <- function(df, end_year) {
   names(result) <- gsub("^native_american$", "native_american", names(result), ignore.case = TRUE)
   names(result) <- gsub("^multiracial$", "multiracial", names(result), ignore.case = TRUE)
 
-  # Update column references to lowercase after rename
-  district_col_lc <- tolower(gsub(" ", "_", district_col))
-  school_col_lc <- tolower(gsub(" ", "_", school_col))
-  district_name_col_lc <- tolower(gsub(" ", "_", district_name_col))
-  school_name_col_lc <- tolower(gsub(" ", "_", school_name_col))
+  # Update column references to lowercase after rename (if they exist)
+  district_col_lc <- if (!is.null(district_col)) tolower(gsub(" ", "_", district_col)) else NULL
+  school_col_lc <- if (!is.null(school_col)) tolower(gsub(" ", "_", school_col)) else NULL
+  district_name_col_lc <- if (!is.null(district_name_col)) tolower(gsub(" ", "_", district_name_col)) else NULL
+  school_name_col_lc <- if (!is.null(school_name_col)) tolower(gsub(" ", "_", school_name_col)) else NULL
+
+  # Build mutate arguments dynamically based on available columns
+  mutate_args <- list(
+    end_year = end_year,
+    type = "Campus"
+  )
+
+  if (!is.null(district_col_lc)) {
+    mutate_args$district_id = sprintf("%02d", as.integer(result[[district_col_lc]]))
+  }
+  if (!is.null(school_col_lc)) {
+    mutate_args$school_num = sprintf("%04d", as.integer(result[[school_col_lc]]))
+  }
+  if (!is.null(district_col_lc) && !is.null(school_col_lc)) {
+    mutate_args$campus_id = paste0(
+      sprintf("%02d", as.integer(result[[district_col_lc]])), "-",
+      sprintf("%04d", as.integer(result[[school_col_lc]]))
+    )
+  }
+  if (!is.null(district_name_col_lc)) {
+    mutate_args$district_name = result[[district_name_col_lc]]
+  }
+  if (!is.null(school_name_col_lc)) {
+    mutate_args$campus_name = result[[school_name_col_lc]]
+  }
 
   # Add metadata columns
   result <- result |>
-    dplyr::mutate(
-      end_year = end_year,
-      type = "Campus",
-      district_id = sprintf("%02d", as.integer(.data[[district_col_lc]])),
-      school_num = sprintf("%04d", as.integer(.data[[school_col_lc]])),
-      campus_id = paste0(sprintf("%02d", as.integer(.data[[district_col_lc]])), "-",
-                         sprintf("%04d", as.integer(.data[[school_col_lc]]))),
-      district_name = .data[[district_name_col_lc]],
-      campus_name = .data[[school_name_col_lc]]
-    )
+    dplyr::mutate(!!!mutate_args)
 
   # Calculate row_total from standardized demographic columns
   demo_cols_std <- c("white", "black", "hispanic", "asian",
