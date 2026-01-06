@@ -27,3 +27,7 @@ Meta/
 
 # macOS
 .DS_Store
+
+# Audit and research documents
+EXPANSION.md
+*-AUDIT*.md

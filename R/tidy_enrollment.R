@@ -67,7 +67,10 @@ tidy_enr <- function(df) {
           result <- result |>
             dplyr::mutate(
               row_total = df$row_total,
-              pct = n_students / row_total
+              pct = dplyr::case_when(
+                row_total > 0 ~ pmin(n_students / row_total, 1.0),
+                TRUE ~ 0.0
+              )
             ) |>
             dplyr::select(-row_total)
         } else {
@@ -135,7 +138,10 @@ tidy_enr <- function(df) {
           result <- result |>
             dplyr::mutate(
               row_total = df$row_total,
-              pct = n_students / row_total
+              pct = dplyr::case_when(
+                row_total > 0 ~ pmin(n_students / row_total, 1.0),
+                TRUE ~ 0.0
+              )
             ) |>
             dplyr::select(-row_total)
         } else {
@@ -184,7 +190,14 @@ id_enr_aggs <- function(df) {
       is_district = type == "District",
 
       # Campus level: Type == "Campus"
-      is_campus = type == "Campus"
+      is_campus = type == "Campus",
+
+      # Aggregation flag: Single column with state/district/campus values
+      aggregation_flag = dplyr::case_when(
+        !is.na(district_id) & !is.na(campus_id) & district_id != "" & campus_id != "" ~ "campus",
+        !is.na(district_id) & district_id != "" ~ "district",
+        TRUE ~ "state"
+      )
     )
 }
 

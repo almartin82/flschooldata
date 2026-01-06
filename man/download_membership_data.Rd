@@ -16,4 +16,8 @@ List with campus and district data frames
 Downloads the "Membership by School by Grade by Race/Ethnicity" Excel files
 from FLDOE. These provide the most detailed enrollment data.
 }
+\details{
+The Excel file has 3 sheets: State (summary), District, and School.
+Row 1 is a privacy notice, row 2 contains headers.
+}
 \keyword{internal}

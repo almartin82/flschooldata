@@ -69,8 +69,17 @@ process_enr <- function(raw_data, end_year) {
 #' @keywords internal
 process_campus_enr <- function(df, end_year) {
 
+  # The raw data structure:
+  # - Rows: (District, School, Grade) combinations
+  # - Columns: Grade, White, Black, Hispanic, Asian, Pacific Islander, Native American, Multiracial
+  # - Each demographic value is the count FOR THAT SPECIFIC GRADE
+  #
+  # We need to transform this to:
+  # - One row per school
+  # - Demographic columns: totals across all grades
+  # - Grade columns: total enrollment for each grade
+
   cols <- names(df)
-  n_rows <- nrow(df)
 
   # Helper to find column by pattern (case-insensitive)
   find_col <- function(patterns) {
@@ -81,119 +90,168 @@ process_campus_enr <- function(df, end_year) {
     NULL
   }
 
-  # Build result dataframe with same number of rows as input
-  result <- data.frame(
-    end_year = rep(end_year, n_rows),
-    type = rep("Campus", n_rows),
-    stringsAsFactors = FALSE
+  # Find demographic columns
+  demo_cols <- c(
+    find_col(c("WHITE", "W", "WHITE_TOTAL")),
+    find_col(c("BLACK_OR_AFRICAN_AMERICAN", "BLACK", "B", "BLACK_TOTAL", "AFRICAN_AMERICAN")),
+    find_col(c("HISPANIC_LATINO", "HISPANIC", "H", "HISP", "HISPANIC_TOTAL")),
+    find_col(c("ASIAN", "A", "ASIAN_TOTAL")),
+    find_col(c("NATIVE_HAWAIIAN_OR_OTHER_PACIFIC_ISLANDER", "PACIFIC_ISLANDER", "P", "PACIFIC", "HAWAIIAN_PACIFIC")),
+    find_col(c("NATIVE_AMERICAN", "I", "AMERICAN_INDIAN", "INDIAN")),
+    find_col(c("MULTIRACIAL", "M", "TWO_OR_MORE", "MULTI"))
   )
+  demo_cols <- demo_cols[!is.na(demo_cols)]
 
-  # District ID (2 digits)
+  # Find grade column
+  grade_col <- find_col(c("GRADE", "GRADE_LEVEL"))
+  if (is.null(grade_col)) {
+    stop("Could not find GRADE column in raw campus data")
+  }
+
+  # Find identifier columns
   district_col <- find_col(c("DISTRICT_ID", "DISTRICT", "DIST", "DIST_NO", "DISTRICT_NUMBER"))
-  if (!is.null(district_col)) {
-    result$district_id <- sprintf("%02d", as.integer(trimws(df[[district_col]])))
-  }
-
-  # School ID (4 digits)
   school_col <- find_col(c("SCHOOL_ID", "SCHOOL", "SCH", "SCHOOL_NUMBER", "SCHOOL_NO"))
-  if (!is.null(school_col)) {
-    result$school_num <- sprintf("%04d", as.integer(trimws(df[[school_col]])))
-    # Create combined campus_id
-    if (!is.null(district_col)) {
-      result$campus_id <- paste0(result$district_id, "-", result$school_num)
-    }
-  }
-
-  # Names
-  school_name_col <- find_col(c("SCHOOL_NAME", "SCHNAME", "NAME", "SCHOOL"))
-  if (!is.null(school_name_col)) {
-    result$campus_name <- trimws(df[[school_name_col]])
-  }
-
   district_name_col <- find_col(c("DISTRICT_NAME", "DISTNAME", "DISTRICT"))
-  if (!is.null(district_name_col)) {
-    result$district_name <- trimws(df[[district_name_col]])
-  } else if (!is.null(district_col)) {
-    # Use lookup table for district names
-    dist_names <- get_fl_district_names()
-    result$district_name <- dist_names[result$district_id]
-  }
+  school_name_col <- find_col(c("SCHOOL_NAME", "SCHNAME", "NAME", "SCHOOL"))
 
-  # Demographics - Race/Ethnicity (process before row_total to calculate if needed)
-  # Note: FLDOE uses longer column names like "BLACK_OR_AFRICAN_AMERICAN"
-  demo_map <- list(
-    white = c("WHITE", "W", "WHITE_TOTAL"),
-    black = c("BLACK_OR_AFRICAN_AMERICAN", "BLACK", "B", "BLACK_TOTAL", "AFRICAN_AMERICAN"),
-    hispanic = c("HISPANIC_LATINO", "HISPANIC", "H", "HISP", "HISPANIC_TOTAL"),
-    asian = c("ASIAN", "A", "ASIAN_TOTAL"),
-    pacific_islander = c("NATIVE_HAWAIIAN_OR_OTHER_PACIFIC_ISLANDER", "PACIFIC_ISLANDER", "P", "PACIFIC", "HAWAIIAN_PACIFIC"),
-    native_american = c("NATIVE_AMERICAN", "I", "AMERICAN_INDIAN", "INDIAN"),
-    multiracial = c("MULTIRACIAL", "M", "TWO_OR_MORE", "MULTI")
+  # Convert demographic columns to numeric
+  df_demo <- df
+  for (col in demo_cols) {
+    df_demo[[paste0(col, "_num")]] <- safe_numeric(df[[col]])
+  }
+  demo_num_cols <- paste0(demo_cols, "_num")
+
+  # Step 1: Calculate grade totals (sum of demographics for each grade)
+  df_grade_total <- df_demo |>
+    dplyr::mutate(
+      grade_total = rowSums(dplyr::across(dplyr::all_of(demo_num_cols)), na.rm = TRUE)
+    )
+
+  # Step 2: Aggregate to one row per school
+  # Demographic totals: sum across all grades for each school
+  result <- df_grade_total |>
+    dplyr::group_by(
+      dplyr::across(dplyr::all_of(c(district_col, school_col, district_name_col, school_name_col)))
+    ) |>
+    dplyr::summarize(
+      dplyr::across(dplyr::all_of(demo_num_cols), list(total = ~sum(.x, na.rm = TRUE))),
+      .groups = "drop"
+    ) |>
+    dplyr::rename_with(~gsub("_num_total", "", .x))
+
+  # Step 3: Pivot grade data wider to create grade_pk, grade_k, grade_01, etc. columns
+  grade_pivot <- df_grade_total |>
+    dplyr::select(
+      dplyr::all_of(c(district_col, school_col, grade_col, "grade_total"))
+    ) |>
+    dplyr::mutate(
+      # Standardize grade names
+      grade_std = dplyr::case_when(
+        .data[[grade_col]] %in% c("PK", "PRE-K", "PRE_K", "PREK") ~ "PK",
+        .data[[grade_col]] %in% c("K", "KG", "KINDERGARTEN") ~ "K",
+        .data[[grade_col]] %in% c("1", "01", "GR1", "GR_1") ~ "01",
+        .data[[grade_col]] %in% c("2", "02", "GR2", "GR_2") ~ "02",
+        .data[[grade_col]] %in% c("3", "03", "GR3", "GR_3") ~ "03",
+        .data[[grade_col]] %in% c("4", "04", "GR4", "GR_4") ~ "04",
+        .data[[grade_col]] %in% c("5", "05", "GR5", "GR_5") ~ "05",
+        .data[[grade_col]] %in% c("6", "06", "GR6", "GR_6") ~ "06",
+        .data[[grade_col]] %in% c("7", "07", "GR7", "GR_7") ~ "07",
+        .data[[grade_col]] %in% c("8", "08", "GR8", "GR_8") ~ "08",
+        .data[[grade_col]] %in% c("9", "09", "GR9", "GR_9") ~ "09",
+        .data[[grade_col]] %in% c("10", "GR10", "GR_10") ~ "10",
+        .data[[grade_col]] %in% c("11", "GR11", "GR_11") ~ "11",
+        .data[[grade_col]] %in% c("12", "GR12", "GR_12") ~ "12",
+        TRUE ~ .data[[grade_col]]
+      )
+    ) |>
+    dplyr::group_by(
+      dplyr::across(dplyr::all_of(c(district_col, school_col, "grade_std")))
+    ) |>
+    dplyr::summarize(
+      n_students = sum(.data$grade_total, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    tidyr::pivot_wider(
+      names_from = "grade_std",
+      values_from = "n_students",
+      names_prefix = "grade_"
+    )
+
+  # Join demographic totals with grade-level pivots
+  result <- result |>
+    dplyr::left_join(grade_pivot, by = c(district_col, school_col))
+
+  # Rename columns to standard names BEFORE adding metadata
+  result <- result |>
+    dplyr::rename_with(~tolower(gsub(" ", "_", .x)))
+
+  # Now standardize demographic column names (already lowercase from rename_with)
+  names(result) <- gsub("^white$", "white", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^black_or_african_american$", "black", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^hispanic_latino$", "hispanic", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^asian$", "asian", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^native_hawaiian_or_other_pacific_islander$", "pacific_islander", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^native_american$", "native_american", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^multiracial$", "multiracial", names(result), ignore.case = TRUE)
+
+  # Update column references to lowercase after rename (if they exist)
+  district_col_lc <- if (!is.null(district_col)) tolower(gsub(" ", "_", district_col)) else NULL
+  school_col_lc <- if (!is.null(school_col)) tolower(gsub(" ", "_", school_col)) else NULL
+  district_name_col_lc <- if (!is.null(district_name_col)) tolower(gsub(" ", "_", district_name_col)) else NULL
+  school_name_col_lc <- if (!is.null(school_name_col)) tolower(gsub(" ", "_", school_name_col)) else NULL
+
+  # Build mutate arguments dynamically based on available columns
+  mutate_args <- list(
+    end_year = end_year,
+    type = "Campus"
   )
 
-  for (name in names(demo_map)) {
-    col <- find_col(demo_map[[name]])
-    if (!is.null(col)) {
-      result[[name]] <- safe_numeric(df[[col]])
-    }
+  if (!is.null(district_col_lc)) {
+    mutate_args$district_id = sprintf("%02d", as.integer(result[[district_col_lc]]))
+  }
+  if (!is.null(school_col_lc)) {
+    mutate_args$school_num = sprintf("%04d", as.integer(result[[school_col_lc]]))
+  }
+  if (!is.null(district_col_lc) && !is.null(school_col_lc)) {
+    mutate_args$campus_id = paste0(
+      sprintf("%02d", as.integer(result[[district_col_lc]])), "-",
+      sprintf("%04d", as.integer(result[[school_col_lc]]))
+    )
+  }
+  if (!is.null(district_name_col_lc)) {
+    mutate_args$district_name = result[[district_name_col_lc]]
+  }
+  if (!is.null(school_name_col_lc)) {
+    mutate_args$campus_name = result[[school_name_col_lc]]
   }
 
-  # Total enrollment - try explicit column first, then calculate from demographics
-  total_col <- find_col(c("TOTAL", "TOT", "MEMBERSHIP", "ENROLLMENT", "TOTAL_MEMBERSHIP"))
-  if (!is.null(total_col)) {
-    result$row_total <- safe_numeric(df[[total_col]])
-  } else {
-    # Calculate row_total from demographics (sum of race columns)
-    demo_cols <- intersect(names(demo_map), names(result))
-    if (length(demo_cols) > 0) {
-      result$row_total <- rowSums(result[, demo_cols, drop = FALSE], na.rm = TRUE)
-    } else {
-      result$row_total <- rep(NA_real_, n_rows)
-    }
+  # Add metadata columns
+  result <- result |>
+    dplyr::mutate(!!!mutate_args)
+
+  # Calculate row_total from standardized demographic columns
+  demo_cols_std <- c("white", "black", "hispanic", "asian",
+                     "pacific_islander", "native_american", "multiracial")
+  demo_cols_std <- demo_cols_std[demo_cols_std %in% names(result)]
+  if (length(demo_cols_std) > 0) {
+    result <- result |>
+      dplyr::mutate(row_total = rowSums(dplyr::pick(dplyr::all_of(demo_cols_std)), na.rm = TRUE))
   }
 
-  # Gender
-  gender_map <- list(
-    male = c("MALE", "M", "MALE_TOTAL"),
-    female = c("FEMALE", "F", "FEMALE_TOTAL")
-  )
+  # Select final columns
+  result <- result |>
+    dplyr::select(
+      end_year, type, district_id, campus_id, district_name, campus_name,
+      dplyr::any_of(c("white", "black", "hispanic", "asian",
+                      "pacific_islander", "native_american", "multiracial",
+                      "grade_pk", "grade_k", "grade_01", "grade_02", "grade_03",
+                      "grade_04", "grade_05", "grade_06", "grade_07", "grade_08",
+                      "grade_09", "grade_10", "grade_11", "grade_12", "row_total"))
+    )
 
-  for (name in names(gender_map)) {
-    col <- find_col(gender_map[[name]])
-    if (!is.null(col)) {
-      result[[name]] <- safe_numeric(df[[col]])
-    }
-  }
-
-  # Grade levels
-  grade_map <- list(
-    grade_pk = c("GRADE_PK", "PK", "PRE_K", "PREK"),
-    grade_k = c("GRADE_K", "KG", "K", "KINDERGARTEN"),
-    grade_01 = c("GRADE_01", "GR_1", "GR1", "1"),
-    grade_02 = c("GRADE_02", "GR_2", "GR2", "2"),
-    grade_03 = c("GRADE_03", "GR_3", "GR3", "3"),
-    grade_04 = c("GRADE_04", "GR_4", "GR4", "4"),
-    grade_05 = c("GRADE_05", "GR_5", "GR5", "5"),
-    grade_06 = c("GRADE_06", "GR_6", "GR6", "6"),
-    grade_07 = c("GRADE_07", "GR_7", "GR7", "7"),
-    grade_08 = c("GRADE_08", "GR_8", "GR8", "8"),
-    grade_09 = c("GRADE_09", "GR_9", "GR9", "9"),
-    grade_10 = c("GRADE_10", "GR_10", "GR10", "10"),
-    grade_11 = c("GRADE_11", "GR_11", "GR11", "11"),
-    grade_12 = c("GRADE_12", "GR_12", "GR12", "12")
-  )
-
-  for (name in names(grade_map)) {
-    col <- find_col(grade_map[[name]])
-    if (!is.null(col)) {
-      result[[name]] <- safe_numeric(df[[col]])
-    }
-  }
-
-  # Filter out invalid rows (no district or school ID)
-  if ("district_id" %in% names(result)) {
-    result <- result[!is.na(result$district_id) & result$district_id != "NA", ]
-  }
+  # Filter out invalid rows
+  result <- result |>
+    dplyr::filter(!is.na(district_id) & district_id != "NA")
 
   result
 }
@@ -216,8 +274,10 @@ process_district_enr <- function(df, end_year) {
     ))
   }
 
+  # The raw data structure is the same as campus: (District, Grade) rows
+  # with demographic counts per grade
+
   cols <- names(df)
-  n_rows <- nrow(df)
 
   # Helper to find column by pattern (case-insensitive)
   find_col <- function(patterns) {
@@ -228,109 +288,146 @@ process_district_enr <- function(df, end_year) {
     NULL
   }
 
-  # Build result dataframe with same number of rows as input
-  result <- data.frame(
-    end_year = rep(end_year, n_rows),
-    type = rep("District", n_rows),
-    stringsAsFactors = FALSE
+  # Find demographic columns
+  demo_cols <- c(
+    find_col(c("WHITE", "W", "WHITE_TOTAL")),
+    find_col(c("BLACK_OR_AFRICAN_AMERICAN", "BLACK", "B", "BLACK_TOTAL", "AFRICAN_AMERICAN")),
+    find_col(c("HISPANIC_LATINO", "HISPANIC", "H", "HISP", "HISPANIC_TOTAL")),
+    find_col(c("ASIAN", "A", "ASIAN_TOTAL")),
+    find_col(c("NATIVE_HAWAIIAN_OR_OTHER_PACIFIC_ISLANDER", "PACIFIC_ISLANDER", "P", "PACIFIC", "HAWAIIAN_PACIFIC")),
+    find_col(c("NATIVE_AMERICAN", "I", "AMERICAN_INDIAN", "INDIAN")),
+    find_col(c("MULTIRACIAL", "M", "TWO_OR_MORE", "MULTI"))
   )
+  demo_cols <- demo_cols[!is.na(demo_cols)]
 
-  # District ID
+  # Find grade column
+  grade_col <- find_col(c("GRADE", "GRADE_LEVEL"))
+  if (is.null(grade_col)) {
+    stop("Could not find GRADE column in raw district data")
+  }
+
+  # Find identifier columns
   district_col <- find_col(c("DISTRICT_ID", "DISTRICT", "DIST", "DIST_NO", "DISTRICT_NUMBER"))
-  if (!is.null(district_col)) {
-    result$district_id <- sprintf("%02d", as.integer(trimws(df[[district_col]])))
-  }
-
-  # Campus ID is NA for district rows
-  result$campus_id <- rep(NA_character_, n_rows)
-
-  # Names
   district_name_col <- find_col(c("DISTRICT_NAME", "DISTNAME", "DISTRICT"))
-  if (!is.null(district_name_col)) {
-    result$district_name <- trimws(df[[district_name_col]])
-  } else if (!is.null(district_col)) {
-    # Use lookup table for district names
-    dist_names <- get_fl_district_names()
-    result$district_name <- dist_names[result$district_id]
+
+  # Convert demographic columns to numeric
+  df_demo <- df
+  for (col in demo_cols) {
+    df_demo[[paste0(col, "_num")]] <- safe_numeric(df[[col]])
+  }
+  demo_num_cols <- paste0(demo_cols, "_num")
+
+  # Step 1: Calculate grade totals (sum of demographics for each grade)
+  df_grade_total <- df_demo |>
+    dplyr::mutate(
+      grade_total = rowSums(dplyr::across(dplyr::all_of(demo_num_cols)), na.rm = TRUE)
+    )
+
+  # Step 2: Aggregate to one row per district
+  # Demographic totals: sum across all grades for each district
+  result <- df_grade_total |>
+    dplyr::group_by(
+      dplyr::across(dplyr::all_of(c(district_col, district_name_col)))
+    ) |>
+    dplyr::summarize(
+      dplyr::across(dplyr::all_of(demo_num_cols), list(total = ~sum(.x, na.rm = TRUE))),
+      .groups = "drop"
+    ) |>
+    dplyr::rename_with(~gsub("_num_total", "", .x))
+
+  # Step 3: Pivot grade data wider to create grade_pk, grade_k, grade_01, etc. columns
+  grade_pivot <- df_grade_total |>
+    dplyr::select(
+      dplyr::all_of(c(district_col, grade_col, "grade_total"))
+    ) |>
+    dplyr::mutate(
+      # Standardize grade names
+      grade_std = dplyr::case_when(
+        .data[[grade_col]] %in% c("PK", "PRE-K", "PRE_K", "PREK") ~ "PK",
+        .data[[grade_col]] %in% c("K", "KG", "KINDERGARTEN") ~ "K",
+        .data[[grade_col]] %in% c("1", "01", "GR1", "GR_1") ~ "01",
+        .data[[grade_col]] %in% c("2", "02", "GR2", "GR_2") ~ "02",
+        .data[[grade_col]] %in% c("3", "03", "GR3", "GR_3") ~ "03",
+        .data[[grade_col]] %in% c("4", "04", "GR4", "GR_4") ~ "04",
+        .data[[grade_col]] %in% c("5", "05", "GR5", "GR_5") ~ "05",
+        .data[[grade_col]] %in% c("6", "06", "GR6", "GR_6") ~ "06",
+        .data[[grade_col]] %in% c("7", "07", "GR7", "GR_7") ~ "07",
+        .data[[grade_col]] %in% c("8", "08", "GR8", "GR_8") ~ "08",
+        .data[[grade_col]] %in% c("9", "09", "GR9", "GR_9") ~ "09",
+        .data[[grade_col]] %in% c("10", "GR10", "GR_10") ~ "10",
+        .data[[grade_col]] %in% c("11", "GR11", "GR_11") ~ "11",
+        .data[[grade_col]] %in% c("12", "GR12", "GR_12") ~ "12",
+        TRUE ~ .data[[grade_col]]
+      )
+    ) |>
+    dplyr::group_by(
+      dplyr::across(dplyr::all_of(c(district_col, "grade_std")))
+    ) |>
+    dplyr::summarize(
+      n_students = sum(.data$grade_total, na.rm = TRUE),
+      .groups = "drop"
+    ) |>
+    tidyr::pivot_wider(
+      names_from = "grade_std",
+      values_from = "n_students",
+      names_prefix = "grade_"
+    )
+
+  # Join demographic totals with grade-level pivots
+  result <- result |>
+    dplyr::left_join(grade_pivot, by = district_col)
+
+  # Rename columns to standard names BEFORE adding metadata
+  result <- result |>
+    dplyr::rename_with(~tolower(gsub(" ", "_", .x)))
+
+  # Now standardize demographic column names (already lowercase from rename_with)
+  names(result) <- gsub("^white$", "white", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^black_or_african_american$", "black", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^hispanic_latino$", "hispanic", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^asian$", "asian", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^native_hawaiian_or_other_pacific_islander$", "pacific_islander", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^native_american$", "native_american", names(result), ignore.case = TRUE)
+  names(result) <- gsub("^multiracial$", "multiracial", names(result), ignore.case = TRUE)
+
+  # Update column references to lowercase after rename
+  district_col_lc <- tolower(gsub(" ", "_", district_col))
+  district_name_col_lc <- tolower(gsub(" ", "_", district_name_col))
+
+  # Add metadata columns
+  result <- result |>
+    dplyr::mutate(
+      end_year = end_year,
+      type = "District",
+      district_id = sprintf("%02d", as.integer(.data[[district_col_lc]])),
+      campus_id = NA_character_,
+      district_name = .data[[district_name_col_lc]],
+      campus_name = NA_character_
+    )
+
+  # Calculate row_total from standardized demographic columns
+  demo_cols_std <- c("white", "black", "hispanic", "asian",
+                     "pacific_islander", "native_american", "multiracial")
+  demo_cols_std <- demo_cols_std[demo_cols_std %in% names(result)]
+  if (length(demo_cols_std) > 0) {
+    result <- result |>
+      dplyr::mutate(row_total = rowSums(dplyr::pick(dplyr::all_of(demo_cols_std)), na.rm = TRUE))
   }
 
-  result$campus_name <- rep(NA_character_, n_rows)
-
-  # Demographics - Race/Ethnicity (process before row_total to calculate if needed)
-  # Note: FLDOE uses longer column names like "BLACK_OR_AFRICAN_AMERICAN"
-  demo_map <- list(
-    white = c("WHITE", "W", "WHITE_TOTAL"),
-    black = c("BLACK_OR_AFRICAN_AMERICAN", "BLACK", "B", "BLACK_TOTAL", "AFRICAN_AMERICAN"),
-    hispanic = c("HISPANIC_LATINO", "HISPANIC", "H", "HISP", "HISPANIC_TOTAL"),
-    asian = c("ASIAN", "A", "ASIAN_TOTAL"),
-    pacific_islander = c("NATIVE_HAWAIIAN_OR_OTHER_PACIFIC_ISLANDER", "PACIFIC_ISLANDER", "P", "PACIFIC", "HAWAIIAN_PACIFIC"),
-    native_american = c("NATIVE_AMERICAN", "I", "AMERICAN_INDIAN", "INDIAN"),
-    multiracial = c("MULTIRACIAL", "M", "TWO_OR_MORE", "MULTI")
-  )
-
-  for (name in names(demo_map)) {
-    col <- find_col(demo_map[[name]])
-    if (!is.null(col)) {
-      result[[name]] <- safe_numeric(df[[col]])
-    }
-  }
-
-  # Total enrollment - try explicit column first, then calculate from demographics
-  total_col <- find_col(c("TOTAL", "TOT", "MEMBERSHIP", "ENROLLMENT", "TOTAL_MEMBERSHIP"))
-  if (!is.null(total_col)) {
-    result$row_total <- safe_numeric(df[[total_col]])
-  } else {
-    # Calculate row_total from demographics (sum of race columns)
-    demo_cols <- intersect(names(demo_map), names(result))
-    if (length(demo_cols) > 0) {
-      result$row_total <- rowSums(result[, demo_cols, drop = FALSE], na.rm = TRUE)
-    } else {
-      result$row_total <- rep(NA_real_, n_rows)
-    }
-  }
-
-  # Gender
-  gender_map <- list(
-    male = c("MALE", "M", "MALE_TOTAL"),
-    female = c("FEMALE", "F", "FEMALE_TOTAL")
-  )
-
-  for (name in names(gender_map)) {
-    col <- find_col(gender_map[[name]])
-    if (!is.null(col)) {
-      result[[name]] <- safe_numeric(df[[col]])
-    }
-  }
-
-  # Grade levels
-  grade_map <- list(
-    grade_pk = c("GRADE_PK", "PK", "PRE_K", "PREK"),
-    grade_k = c("GRADE_K", "KG", "K", "KINDERGARTEN"),
-    grade_01 = c("GRADE_01", "GR_1", "GR1", "1"),
-    grade_02 = c("GRADE_02", "GR_2", "GR2", "2"),
-    grade_03 = c("GRADE_03", "GR_3", "GR3", "3"),
-    grade_04 = c("GRADE_04", "GR_4", "GR4", "4"),
-    grade_05 = c("GRADE_05", "GR_5", "GR5", "5"),
-    grade_06 = c("GRADE_06", "GR_6", "GR6", "6"),
-    grade_07 = c("GRADE_07", "GR_7", "GR7", "7"),
-    grade_08 = c("GRADE_08", "GR_8", "GR8", "8"),
-    grade_09 = c("GRADE_09", "GR_9", "GR9", "9"),
-    grade_10 = c("GRADE_10", "GR_10", "GR10", "10"),
-    grade_11 = c("GRADE_11", "GR_11", "GR11", "11"),
-    grade_12 = c("GRADE_12", "GR_12", "GR12", "12")
-  )
-
-  for (name in names(grade_map)) {
-    col <- find_col(grade_map[[name]])
-    if (!is.null(col)) {
-      result[[name]] <- safe_numeric(df[[col]])
-    }
-  }
+  # Select final columns
+  result <- result |>
+    dplyr::select(
+      end_year, type, district_id, campus_id, district_name, campus_name,
+      dplyr::any_of(c("white", "black", "hispanic", "asian",
+                      "pacific_islander", "native_american", "multiracial",
+                      "grade_pk", "grade_k", "grade_01", "grade_02", "grade_03",
+                      "grade_04", "grade_05", "grade_06", "grade_07", "grade_08",
+                      "grade_09", "grade_10", "grade_11", "grade_12", "row_total"))
+    )
 
   # Filter out invalid rows
-  if ("district_id" %in% names(result)) {
-    result <- result[!is.na(result$district_id) & result$district_id != "NA", ]
-  }
+  result <- result |>
+    dplyr::filter(!is.na(district_id) & district_id != "NA")
 
   result
 }
