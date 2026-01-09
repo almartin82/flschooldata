@@ -413,11 +413,11 @@ declining |>
 
 ---
 
-## 15. Asian students are the fastest-growing demographic
+## 15. Multiracial students are the fastest-growing demographic
 
-While Hispanic students are the largest group, Asian student enrollment has grown at the highest rate percentage-wise.
+While Hispanic students are the largest group, multiracial student enrollment has grown at the highest rate percentage-wise since 2015 (34.9% growth, compared to 26.1% for Hispanic students and 15.3% for Asian students).
 
-```{r asian-growth}
+```{r multiracial-growth}
 demo_trend <- enr |>
   filter(is_state, grade_level == "TOTAL",
          subgroup %in% c("hispanic", "white", "black", "asian", "multiracial")) |>
@@ -431,7 +431,7 @@ demo_trend |>
   arrange(desc(pct_change))
 ```
 
-```{r asian-growth-chart}
+```{r multiracial-growth-chart}
 demo_trend |>
   ggplot(aes(x = end_year, y = pct_change, color = subgroup)) +
   geom_line(linewidth = 1.2) +
