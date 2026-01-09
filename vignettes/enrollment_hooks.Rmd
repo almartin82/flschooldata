@@ -36,7 +36,7 @@ This vignette explores Florida's public school enrollment data, surfacing key tr
 Florida public schools serve nearly 3 million students, trailing only California, Texas, and New York.
 
 ```{r statewide-trend}
-enr <- fetch_enr_multi(2015:2024)
+enr <- fetch_enr_multi(2015:2024, use_cache = TRUE)
 
 state_totals <- enr |>
   filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
@@ -67,7 +67,7 @@ ggplot(state_totals, aes(x = end_year, y = n_students)) +
 Miami-Dade County Public Schools, with 340,000+ students, is the fourth-largest school district in America.
 
 ```{r top-districts}
-enr_2024 <- fetch_enr(2024)
+enr_2024 <- fetch_enr(2024, use_cache = TRUE)
 
 top_10 <- enr_2024 |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
