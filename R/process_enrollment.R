@@ -248,7 +248,6 @@ process_campus_enr <- function(df, end_year) {
                       "grade_04", "grade_05", "grade_06", "grade_07", "grade_08",
                       "grade_09", "grade_10", "grade_11", "grade_12", "row_total"))
     )
-
   # Filter out invalid rows
   result <- result |>
     dplyr::filter(!is.na(district_id) & district_id != "NA")

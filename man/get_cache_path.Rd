@@ -2,19 +2,17 @@
 % Please edit documentation in R/cache.R
 \name{get_cache_path}
 \alias{get_cache_path}
-\title{Get cache file path for given year and type}
+\title{Get cache file path for given key}
 \usage{
-get_cache_path(end_year, type)
+get_cache_path(key)
 }
 \arguments{
-\item{end_year}{School year end}
-
-\item{type}{Data type ("tidy" or "wide")}
+\item{key}{Cache key (e.g., "enr_tidy_2024" or "graduation_2024")}
 }
 \value{
 Full path to cache file
 }
 \description{
-Get cache file path for given year and type
+Get cache file path for given key
 }
 \keyword{internal}

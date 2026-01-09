@@ -28,27 +28,25 @@ get_cache_dir <- function() {
 }
 
 
-#' Get cache file path for given year and type
+#' Get cache file path for given key
 #'
-#' @param end_year School year end
-#' @param type Data type ("tidy" or "wide")
+#' @param key Cache key (e.g., "enr_tidy_2024" or "graduation_2024")
 #' @return Full path to cache file
 #' @keywords internal
-get_cache_path <- function(end_year, type) {
+get_cache_path <- function(key) {
   cache_dir <- get_cache_dir()
-  file.path(cache_dir, paste0("enr_", type, "_", end_year, ".rds"))
+  file.path(cache_dir, paste0(key, ".rds"))
 }
 
 
 #' Check if cached data exists and is valid
 #'
-#' @param end_year School year end
-#' @param type Data type ("tidy" or "wide")
+#' @param key Cache key (e.g., "enr_tidy_2024" or "graduation_2024")
 #' @param max_age Maximum age in days (default 30)
 #' @return TRUE if valid cache exists
 #' @keywords internal
-cache_exists <- function(end_year, type, max_age = 30) {
-  cache_path <- get_cache_path(end_year, type)
+cache_exists <- function(key, max_age = 30) {
+  cache_path <- get_cache_path(key)
 
   if (!file.exists(cache_path)) {
     return(FALSE)
@@ -64,25 +62,28 @@ cache_exists <- function(end_year, type, max_age = 30) {
 
 #' Read data from cache
 #'
-#' @param end_year School year end
-#' @param type Data type ("tidy" or "wide")
-#' @return Cached data frame
+#' @param key Cache key (e.g., "enr_tidy_2024" or "graduation_2024")
+#' @return Cached data frame or NULL if not found
 #' @keywords internal
-read_cache <- function(end_year, type) {
-  cache_path <- get_cache_path(end_year, type)
+cache_read <- function(key) {
+  cache_path <- get_cache_path(key)
+
+  if (!file.exists(cache_path)) {
+    return(NULL)
+  }
+
   readRDS(cache_path)
 }
 
 
 #' Write data to cache
 #'
+#' @param key Cache key (e.g., "enr_tidy_2024" or "graduation_2024")
 #' @param df Data frame to cache
-#' @param end_year School year end
-#' @param type Data type ("tidy" or "wide")
 #' @return Invisibly returns the cache path
 #' @keywords internal
-write_cache <- function(df, end_year, type) {
-  cache_path <- get_cache_path(end_year, type)
+cache_write <- function(key, df) {
+  cache_path <- get_cache_path(key)
   saveRDS(df, cache_path)
   invisible(cache_path)
 }
@@ -92,8 +93,8 @@ write_cache <- function(df, end_year, type) {
 #'
 #' Removes cached data files.
 #'
-#' @param end_year Optional school year to clear. If NULL, clears all years.
-#' @param type Optional data type to clear. If NULL, clears all types.
+#' @param key Optional cache key pattern to clear (e.g., "enr", "graduation", "2024").
+#'   If NULL, clears all cached files.
 #' @return Invisibly returns the number of files removed
 #' @export
 #' @examples
@@ -102,24 +103,20 @@ write_cache <- function(df, end_year, type) {
 #' clear_cache()
 #'
 #' # Clear only 2024 data
-#' clear_cache(2024)
+#' clear_cache("2024")
 #'
-#' # Clear only tidy format data
-#' clear_cache(type = "tidy")
+#' # Clear only enrollment data
+#' clear_cache("enr")
+#'
+#' # Clear only graduation data
+#' clear_cache("graduation")
 #' }
-clear_cache <- function(end_year = NULL, type = NULL) {
+clear_cache <- function(key = NULL) {
   cache_dir <- get_cache_dir()
 
-  if (!is.null(end_year) && !is.null(type)) {
-    # Clear specific file
-    files <- get_cache_path(end_year, type)
-    files <- files[file.exists(files)]
-  } else if (!is.null(end_year)) {
-    # Clear all types for year
-    files <- list.files(cache_dir, pattern = paste0("_", end_year, "\\.rds$"), full.names = TRUE)
-  } else if (!is.null(type)) {
-    # Clear all years for type
-    files <- list.files(cache_dir, pattern = paste0("^enr_", type, "_"), full.names = TRUE)
+  if (!is.null(key)) {
+    # Clear files matching the key pattern
+    files <- list.files(cache_dir, pattern = paste0(key, "\\.rds$"), full.names = TRUE)
   } else {
     # Clear all
     files <- list.files(cache_dir, pattern = "\\.rds$", full.names = TRUE)
@@ -157,13 +154,12 @@ cache_status <- function() {
 
   info <- file.info(files)
   info$file <- basename(files)
-  info$year <- as.integer(gsub(".*_(\\d{4})\\.rds$", "\\1", info$file))
-  info$type <- gsub("^enr_(.*)_\\d{4}\\.rds$", "\\1", info$file)
+  info$key <- gsub("\\.rds$", "", info$file)
   info$size_mb <- round(info$size / 1024 / 1024, 2)
   info$age_days <- round(as.numeric(difftime(Sys.time(), info$mtime, units = "days")), 1)
 
-  result <- info[, c("year", "type", "size_mb", "age_days")]
-  result <- result[order(result$year, result$type), ]
+  result <- info[, c("key", "size_mb", "age_days")]
+  result <- result[order(result$key), ]
   rownames(result) <- NULL
 
   print(result)

@@ -36,7 +36,7 @@ This vignette explores Florida's public school enrollment data, surfacing key tr
 Florida public schools serve nearly 3 million students, trailing only California, Texas, and New York.
 
 ```{r statewide-trend}
-enr <- fetch_enr_multi(2015:2024)
+enr <- fetch_enr_multi(2015:2024, use_cache = TRUE)
 
 state_totals <- enr |>
   filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") |>
@@ -67,7 +67,7 @@ ggplot(state_totals, aes(x = end_year, y = n_students)) +
 Miami-Dade County Public Schools, with 340,000+ students, is the fourth-largest school district in America.
 
 ```{r top-districts}
-enr_2024 <- fetch_enr(2024)
+enr_2024 <- fetch_enr(2024, use_cache = TRUE)
 
 top_10 <- enr_2024 |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
@@ -413,11 +413,11 @@ declining |>
 
 ---
 
-## 15. Asian students are the fastest-growing demographic
+## 15. Multiracial students are the fastest-growing demographic
 
-While Hispanic students are the largest group, Asian student enrollment has grown at the highest rate percentage-wise.
+While Hispanic students are the largest group, multiracial student enrollment has grown at the highest rate percentage-wise since 2015 (34.9% growth, compared to 26.1% for Hispanic students and 15.3% for Asian students).
 
-```{r asian-growth}
+```{r multiracial-growth}
 demo_trend <- enr |>
   filter(is_state, grade_level == "TOTAL",
          subgroup %in% c("hispanic", "white", "black", "asian", "multiracial")) |>
@@ -431,7 +431,7 @@ demo_trend |>
   arrange(desc(pct_change))
 ```
 
-```{r asian-growth-chart}
+```{r multiracial-growth-chart}
 demo_trend |>
   ggplot(aes(x = end_year, y = pct_change, color = subgroup)) +
   geom_line(linewidth = 1.2) +

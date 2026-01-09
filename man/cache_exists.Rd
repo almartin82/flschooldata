@@ -4,12 +4,10 @@
 \alias{cache_exists}
 \title{Check if cached data exists and is valid}
 \usage{
-cache_exists(end_year, type, max_age = 30)
+cache_exists(key, max_age = 30)
 }
 \arguments{
-\item{end_year}{School year end}
-
-\item{type}{Data type ("tidy" or "wide")}
+\item{key}{Cache key (e.g., "enr_tidy_2024" or "graduation_2024")}
 
 \item{max_age}{Maximum age in days (default 30)}
 }
