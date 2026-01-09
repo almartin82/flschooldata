@@ -29,11 +29,14 @@ navbar:
 
 reference:
   - title: "Fetch Data"
-    desc: "Functions to download enrollment data from FLDOE"
+    desc: "Functions to download enrollment and graduation data from FLDOE"
     contents:
       - fetch_enr
       - fetch_enr_multi
+      - fetch_graduation
       - get_available_years
+      - get_available_grad_years
+      - get_raw_graduation
 
   - title: "Transform Data"
     desc: "Functions to reshape and aggregate enrollment data"
