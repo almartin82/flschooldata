@@ -4,12 +4,11 @@
 \alias{clear_cache}
 \title{Clear the flschooldata cache}
 \usage{
-clear_cache(end_year = NULL, type = NULL)
+clear_cache(key = NULL)
 }
 \arguments{
-\item{end_year}{Optional school year to clear. If NULL, clears all years.}
-
-\item{type}{Optional data type to clear. If NULL, clears all types.}
+\item{key}{Optional cache key pattern to clear (e.g., "enr", "graduation", "2024").
+If NULL, clears all cached files.}
 }
 \value{
 Invisibly returns the number of files removed
@@ -23,9 +22,12 @@ Removes cached data files.
 clear_cache()
 
 # Clear only 2024 data
-clear_cache(2024)
+clear_cache("2024")
 
-# Clear only tidy format data
-clear_cache(type = "tidy")
+# Clear only enrollment data
+clear_cache("enr")
+
+# Clear only graduation data
+clear_cache("graduation")
 }
 }

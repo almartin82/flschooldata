@@ -32,12 +32,12 @@ test_that("get_cache_dir returns valid path", {
 
 test_that("cache functions work correctly", {
   # Test cache path generation
-  path <- get_cache_path(2024, "tidy")
+  path <- get_cache_path("enr_tidy_2024")
   expect_true(grepl("enr_tidy_2024.rds", path))
 
   # Test cache_exists returns FALSE for non-existent cache
   # (Assuming no cache exists for year 9999)
-  expect_false(cache_exists(9999, "tidy"))
+  expect_false(cache_exists("enr_tidy_9999"))
 })
 
 test_that("get_fl_district_names returns all 67 counties plus special districts", {

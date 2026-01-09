@@ -57,13 +57,13 @@ if (end_year < 2014) {
     message("Note: Years 2008-2013 have limited demographic data (FTE files only).")
   }
 
-  # Determine cache type based on tidy parameter
-  cache_type <- if (tidy) "tidy" else "wide"
+  # Determine cache key
+  cache_key <- paste0("enr_", if (tidy) "tidy" else "wide", "_", end_year)
 
   # Check cache first
-  if (use_cache && cache_exists(end_year, cache_type)) {
+  if (use_cache && cache_exists(cache_key)) {
     message(paste("Using cached data for", end_year))
-    return(read_cache(end_year, cache_type))
+    return(cache_read(cache_key))
   }
 
   # Get raw data from FLDOE
@@ -80,7 +80,7 @@ if (end_year < 2014) {
 
   # Cache the result
   if (use_cache) {
-    write_cache(processed, end_year, cache_type)
+    cache_write(cache_key, processed)
   }
 
   processed

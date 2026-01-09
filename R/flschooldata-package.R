@@ -49,3 +49,16 @@
 #' @keywords internal
 "_PACKAGE"
 
+# Declare NSE variables for R CMD check
+utils::globalVariables(c(
+  "%>%", ".",
+  "campus_id", "campus_name",
+  "cohort_count",
+  "district_id", "district_name",
+  "end_year",
+  "grad_rate", "grade_level",
+  "n_graduates", "n_students",
+  "row_total",
+  "school_id", "school_name",
+  "subgroup", "type"
+))
