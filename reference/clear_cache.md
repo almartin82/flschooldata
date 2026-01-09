@@ -5,18 +5,15 @@ Removes cached data files.
 ## Usage
 
 ``` r
-clear_cache(end_year = NULL, type = NULL)
+clear_cache(key = NULL)
 ```
 
 ## Arguments
 
-- end_year:
+- key:
 
-  Optional school year to clear. If NULL, clears all years.
-
-- type:
-
-  Optional data type to clear. If NULL, clears all types.
+  Optional cache key pattern to clear (e.g., "enr", "graduation",
+  "2024"). If NULL, clears all cached files.
 
 ## Value
 
@@ -30,9 +27,12 @@ if (FALSE) { # \dontrun{
 clear_cache()
 
 # Clear only 2024 data
-clear_cache(2024)
+clear_cache("2024")
 
-# Clear only tidy format data
-clear_cache(type = "tidy")
+# Clear only enrollment data
+clear_cache("enr")
+
+# Clear only graduation data
+clear_cache("graduation")
 } # }
 ```

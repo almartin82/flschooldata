@@ -5,18 +5,14 @@ Check if cached data exists and is valid
 ## Usage
 
 ``` r
-cache_exists(end_year, type, max_age = 30)
+cache_exists(key, max_age = 30)
 ```
 
 ## Arguments
 
-- end_year:
+- key:
 
-  School year end
-
-- type:
-
-  Data type ("tidy" or "wide")
+  Cache key (e.g., "enr_tidy_2024" or "graduation_2024")
 
 - max_age:
 

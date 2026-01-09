@@ -1,22 +1,18 @@
-# Get cache file path for given year and type
+# Get cache file path for given key
 
-Get cache file path for given year and type
+Get cache file path for given key
 
 ## Usage
 
 ``` r
-get_cache_path(end_year, type)
+get_cache_path(key)
 ```
 
 ## Arguments
 
-- end_year:
+- key:
 
-  School year end
-
-- type:
-
-  Data type ("tidy" or "wide")
+  Cache key (e.g., "enr_tidy_2024" or "graduation_2024")
 
 ## Value
 

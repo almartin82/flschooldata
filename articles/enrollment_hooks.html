@@ -81,7 +81,7 @@ surfacing key trends and demographic patterns across recent years
 <p>Florida public schools serve nearly 3 million students, trailing only
 California, Texas, and New York.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2015</span><span class="op">:</span><span class="fl">2024</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2015</span><span class="op">:</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">state_totals</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -121,7 +121,7 @@ California, Texas, and New York.</p>
 <p>Miami-Dade County Public Schools, with 340,000+ students, is the
 fourth-largest school district in America.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr_2024</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2024</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">enr_2024</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">top_10</span> <span class="op">&lt;-</span> <span class="va">enr_2024</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -522,10 +522,12 @@ losing students rapidly.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="asian-students-are-the-fastest-growing-demographic">15. Asian students are the fastest-growing demographic<a class="anchor" aria-label="anchor" href="#asian-students-are-the-fastest-growing-demographic"></a>
+<h2 id="multiracial-students-are-the-fastest-growing-demographic">15. Multiracial students are the fastest-growing demographic<a class="anchor" aria-label="anchor" href="#multiracial-students-are-the-fastest-growing-demographic"></a>
 </h2>
-<p>While Hispanic students are the largest group, Asian student
-enrollment has grown at the highest rate percentage-wise.</p>
+<p>While Hispanic students are the largest group, multiracial student
+enrollment has grown at the highest rate percentage-wise since 2015
+(34.9% growth, compared to 26.1% for Hispanic students and 15.3% for
+Asian students).</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">demo_trend</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
@@ -560,7 +562,7 @@ enrollment has grown at the highest rate percentage-wise.</p>
 <span>    y <span class="op">=</span> <span class="st">"Percent Change from 2015"</span>,</span>
 <span>    color <span class="op">=</span> <span class="st">"Subgroup"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="enrollment_hooks_files/figure-html/asian-growth-chart-1.png" class="r-plt" alt="" width="768"></p>
+<p><img src="enrollment_hooks_files/figure-html/multiracial-growth-chart-1.png" class="r-plt" alt="" width="768"></p>
 <hr>
 </div>
 <div class="section level2">

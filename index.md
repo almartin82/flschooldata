@@ -317,13 +317,18 @@ Rural county decline
 
 ------------------------------------------------------------------------
 
-### 15. Asian students are the fastest-growing demographic
+### 15. Multiracial students are the fastest-growing demographic
 
-While Hispanic students are the largest group, Asian student enrollment
-has grown at the highest rate percentage-wise since 2015.
+While Hispanic students are the largest group, multiracial student
+enrollment has grown at the highest rate percentage-wise since 2015
+(34.9% growth, compared to 26.1% for Hispanic students and 15.3% for
+Asian students).
 
 ``` r
-enr <- fetch_enr_multi(2015:2025)
+library(flschooldata)
+library(dplyr)
+
+enr <- fetch_enr_multi(2015:2024)
 
 enr %>%
   filter(is_state, grade_level == "TOTAL",
@@ -331,14 +336,14 @@ enr %>%
   group_by(subgroup) %>%
   summarize(
     y2015 = n_students[end_year == 2015],
-    y2025 = n_students[end_year == 2025],
-    pct_change = round((y2025 / y2015 - 1) * 100, 1)
+    y2024 = n_students[end_year == 2024],
+    pct_change = round((y2024 / y2015 - 1) * 100, 1)
   ) %>%
   arrange(desc(pct_change))
 ```
 
 ![Demographic growth
-trends](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/asian-growth-chart-1.png)
+trends](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/multiracial-growth-chart-1.png)
 
 Demographic growth trends
 

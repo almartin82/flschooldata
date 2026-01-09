@@ -2,14 +2,20 @@
 
 ## Fetch Data
 
-Functions to download enrollment data from FLDOE
+Functions to download enrollment and graduation data from FLDOE
 
 - [`fetch_enr()`](https://almartin82.github.io/flschooldata/reference/fetch_enr.md)
   : Fetch Florida enrollment data
 - [`fetch_enr_multi()`](https://almartin82.github.io/flschooldata/reference/fetch_enr_multi.md)
   : Fetch enrollment data for multiple years
+- [`fetch_graduation()`](https://almartin82.github.io/flschooldata/reference/fetch_graduation.md)
+  : Fetch Florida graduation rate data
 - [`get_available_years()`](https://almartin82.github.io/flschooldata/reference/get_available_years.md)
   : Get available years for Florida enrollment data
+- [`get_available_grad_years()`](https://almartin82.github.io/flschooldata/reference/get_available_grad_years.md)
+  : Get available graduation years
+- [`get_raw_graduation()`](https://almartin82.github.io/flschooldata/reference/get_raw_graduation.md)
+  : Download raw graduation data from FLDOE
 
 ## Transform Data
 
