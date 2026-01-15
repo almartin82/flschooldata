@@ -88,6 +88,7 @@ test_that("2022 FSA ELA Grade 3 district URL is available", {
 
 test_that("2021 FSA ELA Grade 3 district URL is available", {
   skip_if_offline()
+  skip("2021 files removed from FLDOE server")
 
   url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/SPR21ELA03SRD.xls"
 
