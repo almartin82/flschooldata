@@ -14,7 +14,8 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE,
   fig.width = 8,
-  fig.height = 5
+  fig.height = 5,
+  cache = TRUE
 )
 ```
 
@@ -465,3 +466,9 @@ These patterns shape education policy across the Sunshine State.
 ---
 
 *Data sourced from the Florida Department of Education.*
+
+---
+
+```{r session-info}
+sessionInfo()
+```
