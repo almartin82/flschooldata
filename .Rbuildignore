@@ -12,3 +12,4 @@
 ^py.*schooldata$
 ^doc$
 ^Meta$
+^vignettes/.*_cache$

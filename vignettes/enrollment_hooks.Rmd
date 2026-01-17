@@ -466,3 +466,9 @@ These patterns shape education policy across the Sunshine State.
 ---
 
 *Data sourced from the Florida Department of Education.*
+
+---
+
+```{r session-info}
+sessionInfo()
+```
