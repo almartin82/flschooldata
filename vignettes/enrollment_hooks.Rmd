@@ -213,6 +213,31 @@ virtual <- enr_2024 |>
 virtual
 ```
 
+```{r virtual-chart}
+# Show virtual school compared to other mid-sized districts
+virtual_comparison <- enr_2024 |>
+  filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL") |>
+  mutate(is_virtual = grepl("Virtual|FLVS", district_name, ignore.case = TRUE)) |>
+  arrange(desc(n_students)) |>
+  filter(row_number() <= 15 | is_virtual) |>
+  select(district_name, n_students, is_virtual)
+
+virtual_comparison |>
+  mutate(district_name = forcats::fct_reorder(district_name, n_students)) |>
+  ggplot(aes(x = n_students, y = district_name, fill = is_virtual)) +
+  geom_col() +
+  scale_x_continuous(labels = scales::comma) +
+  scale_fill_manual(values = c("FALSE" = "#CCCCCC", "TRUE" = "#FF6600"),
+                    labels = c("Traditional", "Virtual"),
+                    name = "District Type") +
+  labs(
+    title = "Florida Virtual School Among Largest Districts (2024)",
+    subtitle = "FLVS highlighted in orange",
+    x = "Total Enrollment",
+    y = NULL
+  )
+```
+
 ---
 
 ## 8. Kindergarten is the leading indicator

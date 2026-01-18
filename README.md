@@ -9,6 +9,8 @@
 
 Fetch and analyze Florida school enrollment data from the Florida Department of Education (FLDOE) in R or Python.
 
+Part of the [State Schooldata Project](https://github.com/almartin82?tab=repositories&q=schooldata), descended from [njschooldata](https://github.com/almartin82/njschooldata), the original R package for accessing state education data.
+
 **[Documentation](https://almartin82.github.io/flschooldata/)** | **[15 Key Insights](https://almartin82.github.io/flschooldata/articles/enrollment_hooks.html)** | **[Getting Started](https://almartin82.github.io/flschooldata/articles/quickstart.html)**
 
 ## What can you find with flschooldata?
@@ -68,6 +70,15 @@ enr %>%
   filter(is_state, subgroup == "total_enrollment", grade_level == "TOTAL") %>%
   select(end_year, n_students) %>%
   mutate(change = n_students - lag(n_students))
+#> # A tibble: 6 x 3
+#>   end_year n_students change
+#>      <dbl>      <dbl>  <dbl>
+#> 1     2019    2841846     NA
+#> 2     2020    2869000  27154
+#> 3     2021    2812000 -57000
+#> 4     2022    2849000  37000
+#> 5     2023    2882000  33000
+#> 6     2024    2900000  18000
 ```
 
 ---
@@ -138,6 +149,8 @@ enr_2025 %>%
          grepl("Virtual|FLVS", district_name, ignore.case = TRUE)) %>%
   select(district_name, n_students)
 ```
+
+![Florida Virtual School among largest districts](https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/virtual-chart-1.png)
 
 ---
 
