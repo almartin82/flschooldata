@@ -91,27 +91,19 @@ download_membership_data <- function(end_year) {
   )
 
   tryCatch({
-    response <- httr::GET(
-      url,
-      httr::write_disk(tname, overwrite = TRUE),
-      httr::timeout(300)
-    )
+    response <- download_with_retry(url, tname)
 
-    if (httr::http_error(response)) {
+    if (is.null(response) || httr::http_error(response)) {
       # Try alternate URL pattern for older years
       url_alt <- paste0(
         "https://www.fldoe.org/core/fileparse.php/7584/urlt/",
         year_code, "MembBySchByGradeByRace.xlsx"
       )
 
-      response <- httr::GET(
-        url_alt,
-        httr::write_disk(tname, overwrite = TRUE),
-        httr::timeout(300)
-      )
+      response <- download_with_retry(url_alt, tname)
 
-      if (httr::http_error(response)) {
-        stop(paste("HTTP error:", httr::status_code(response)))
+      if (is.null(response) || httr::http_error(response)) {
+        stop(paste("HTTP error:", if (!is.null(response)) httr::status_code(response) else "connection failed"))
       }
     }
 
@@ -245,23 +237,15 @@ download_fte_data <- function(end_year) {
   downloaded <- FALSE
 
   for (url in urls) {
-    tryCatch({
-      response <- httr::GET(
-        url,
-        httr::write_disk(tname, overwrite = TRUE),
-        httr::timeout(300)
-      )
+    response <- download_with_retry(url, tname, quiet = TRUE)
 
-      if (!httr::http_error(response)) {
-        file_info <- file.info(tname)
-        if (file_info$size > 1000) {
-          downloaded <- TRUE
-          break
-        }
+    if (!is.null(response) && !httr::http_error(response)) {
+      file_info <- file.info(tname)
+      if (file_info$size > 1000) {
+        downloaded <- TRUE
+        break
       }
-    }, error = function(e) {
-      # Try next URL
-    })
+    }
   }
 
   if (!downloaded) {

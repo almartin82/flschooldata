@@ -6,6 +6,76 @@
 NULL
 
 
+# ==============================================================================
+# HTTP Utilities
+# ==============================================================================
+
+#' Download file with retry logic
+#'
+#' Wraps httr::GET with exponential backoff retries for transient network failures.
+#' This helps CI pipelines handle temporary network issues gracefully.
+#'
+#' @param url URL to download
+#' @param dest_file Path to save file (uses tempfile if NULL)
+#' @param max_retries Maximum retry attempts (default 3)
+#' @param timeout Request timeout in seconds (default 300)
+#' @param quiet Suppress retry messages (default FALSE)
+#' @return httr response object
+#' @keywords internal
+download_with_retry <- function(url, dest_file = NULL, max_retries = 3,
+                                 timeout = 300, quiet = FALSE) {
+  if (is.null(dest_file)) {
+    dest_file <- tempfile()
+  }
+
+  last_response <- NULL
+
+
+  for (attempt in seq_len(max_retries)) {
+    response <- tryCatch({
+      httr::GET(
+        url,
+        httr::write_disk(dest_file, overwrite = TRUE),
+        httr::timeout(timeout)
+      )
+    }, error = function(e) {
+      if (!quiet && attempt < max_retries) {
+        wait_time <- 2^attempt
+        message(sprintf("  Attempt %d failed (%s), retrying in %ds...",
+                        attempt, conditionMessage(e), wait_time))
+      }
+      NULL
+    })
+
+    # Success - return response
+
+if (!is.null(response) && !httr::http_error(response)) {
+      return(response)
+    }
+
+    last_response <- response
+
+    # Retry with backoff (except on last attempt)
+    if (attempt < max_retries) {
+      wait_time <- 2^attempt
+      status_msg <- if (!is.null(response)) {
+        sprintf("HTTP %d", httr::status_code(response))
+      } else {
+        "connection error"
+      }
+      if (!quiet) {
+        message(sprintf("  Attempt %d failed (%s), retrying in %ds...",
+                        attempt, status_msg, wait_time))
+      }
+      Sys.sleep(wait_time)
+    }
+  }
+
+  # Return last response (even if failed) so caller can handle error
+  last_response
+}
+
+
 #' Florida District Name Mapping
 #'
 #' Returns a named vector mapping 2-digit district codes to county names.
