@@ -297,6 +297,59 @@ enr %>%
 
 ---
 
+---
+
+## Assessment Data
+
+> **See the full analysis with charts and data output:** [15 Insights from Florida Assessment Data](https://almartin82.github.io/flschooldata/articles/florida-assessment.html)
+
+The `flschooldata` package also provides access to Florida's standardized assessment data:
+
+- **FAST (Florida Assessment of Student Thinking):** 2023-present
+- **FSA (Florida Standards Assessments):** 2019-2022
+
+### Just over half of Florida third graders read on grade level
+
+In 2024, 55% of Florida 3rd graders scored at Level 3 or above on the FAST ELA Reading assessment.
+
+```r
+library(flschooldata)
+library(dplyr)
+
+assess_2024 <- fetch_assessment(2024, "ela", grade = 3, level = "district",
+                                 tidy = FALSE, use_cache = TRUE)
+
+assess_2024 |>
+  filter(is_state) |>
+  select(end_year, subject, grade, n_tested, pct_proficient,
+         pct_level_1, pct_level_2, pct_level_3, pct_level_4, pct_level_5)
+#> # A tibble: 1 x 10
+#>   end_year subject grade n_tested pct_proficient pct_level_1 pct_level_2
+#>      <dbl> <chr>   <chr>    <dbl>          <dbl>       <dbl>       <dbl>
+#> 1     2024 ELA     03      216473             55          22          22
+#>   pct_level_3 pct_level_4 pct_level_5
+#>         <dbl>       <dbl>       <dbl>
+#> 1          23          19          13
+```
+
+![Florida 3rd Grade ELA](https://almartin82.github.io/flschooldata/articles/florida-assessment_files/figure-html/state-ela-g3-chart-1.png)
+
+### Miami-Dade outperforms the state average
+
+Despite being the largest district with over 25,000 3rd graders tested, Miami-Dade's 56% proficiency rate exceeds the state average.
+
+```r
+assess_2024 |>
+  filter(!is_state, n_tested > 5000) |>
+  arrange(desc(n_tested)) |>
+  select(district_name, n_tested, pct_proficient) |>
+  head(10)
+```
+
+![Florida large district comparison](https://almartin82.github.io/flschooldata/articles/florida-assessment_files/figure-html/miami-dade-chart-1.png)
+
+---
+
 ## Installation
 
 ```r
@@ -311,6 +364,8 @@ remotes::install_github("almartin82/flschooldata")
 ```r
 library(flschooldata)
 library(dplyr)
+
+# === Enrollment Data ===
 
 # Fetch one year
 enr_2025 <- fetch_enr(2025)
@@ -330,12 +385,33 @@ enr_2025 %>%
 # Miami-Dade County (district 13)
 enr_2025 %>%
   filter(district_id == "13", subgroup == "total_enrollment")
+
+# === Assessment Data ===
+
+# Fetch 2024 ELA Grade 3 district data
+assess_2024 <- fetch_assessment(2024, "ela", grade = 3)
+
+# Fetch all grades
+assess_all_grades <- fetch_assessment(2024, "ela")
+
+# Fetch Math data
+math_2024 <- fetch_assessment(2024, "math")
+
+# State proficiency
+assess_2024 %>%
+  filter(is_state) %>%
+  select(subject, grade, pct_proficient)
+
+# Check available years
+get_available_assessment_years()
 ```
 
 ### Python
 
 ```python
 import pyflschooldata as fl
+
+# === Enrollment Data ===
 
 # Check available years
 years = fl.get_available_years()
@@ -356,14 +432,36 @@ state_total = df[(df['is_state'] == True) &
 districts = df[(df['is_district'] == True) &
                (df['subgroup'] == 'total_enrollment') &
                (df['grade_level'] == 'TOTAL')].sort_values('n_students', ascending=False)
+
+# === Assessment Data ===
+
+# Fetch 2024 ELA Grade 3 data
+assess = fl.fetch_assessment(2024, subject='ela', grade=3)
+
+# State proficiency
+state_assess = assess[assess['is_state'] == True]
+print(state_assess[['subject', 'grade', 'pct_proficient']])
+
+# Check available assessment years
+assess_years = fl.get_available_assessment_years()
+print(f"Assessment data: {assess_years['years']}")
 ```
 
 ## Data availability
+
+### Enrollment Data
 
 | Years | Source | Notes |
 |-------|--------|-------|
 | **2014-2025** | FLDOE Membership Files | Full school-level demographic data |
 | **2008-2013** | FLDOE FTE Files | District-level totals only |
+
+### Assessment Data
+
+| Years | Assessment | Notes |
+|-------|------------|-------|
+| **2023-2025** | FAST (Florida Assessment of Student Thinking) | ELA Grades 3-10, Math Grades 3-8 |
+| **2019, 2022** | FSA (Florida Standards Assessments) | No 2020/2021 due to COVID-19 |
 
 Data is sourced from the Florida Department of Education.
 
