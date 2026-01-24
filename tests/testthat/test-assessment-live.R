@@ -453,7 +453,7 @@ test_that("2024 FAST file has reasonable row count (60+ rows for 67 districts + 
   df <- readxl::read_excel(tname, sheet = 1)
 
   # Should have header rows + 67 districts + possibly state totals
-  expect_gte(nrow(df), 60, info = "File has fewer than 60 rows")
+  expect_gte(nrow(df), 60, label = "File row count")
 })
 
 test_that("2022 FSA file has reasonable row count (60+ rows)", {
@@ -475,7 +475,7 @@ test_that("2022 FSA file has reasonable row count (60+ rows)", {
 
   df <- readxl::read_excel(tname, sheet = 1)
 
-  expect_gte(nrow(df), 60, info = "File has fewer than 60 rows")
+  expect_gte(nrow(df), 60, label = "File row count")
 })
 
 # ==============================================================================
