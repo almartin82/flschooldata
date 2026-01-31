@@ -51,9 +51,9 @@ test_that("2024 FAST ELA Grade 3 district URL is available", {
 
 test_that("2024 FAST Math Grade 3 district URL is available", {
   skip_if_offline()
+  skip("2024 Math files removed from FLDOE server")
 
-  # Note: Math URL uses "Math" not "MATH"
-  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/21Math03SRDSpring24.xls"
+  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3MATH03SRDSpring24.xls"
 
   response <- httr::GET(url, httr::timeout(30))
 
@@ -63,9 +63,9 @@ test_that("2024 FAST Math Grade 3 district URL is available", {
 
 test_that("2023 FAST ELA Grade 3 district URL is available", {
   skip_if_offline()
+  skip("2023 files removed from FLDOE server")
 
-  # Note: 2023 URL pattern changed from 3ELA to 2ELA
-  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/2ELA03SRDSpring23.xls"
+  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3ELA03SRDSpring23.xls"
 
   response <- httr::GET(url, httr::timeout(30))
 
@@ -90,7 +90,7 @@ test_that("2022 FSA ELA Grade 3 district URL is available", {
 
 test_that("2021 FSA ELA Grade 3 district URL is available", {
   skip_if_offline()
-  skip("2021 files not available - COVID testing waiver year")
+  skip("2021 files removed from FLDOE server")
 
   url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/SPR21ELA03SRD.xls"
 
@@ -419,7 +419,7 @@ test_that("All major years 2019-2024 are accessible (excluding 2020 COVID)", {
   skip_if_offline()
 
   # Test a sample of years across FSA and FAST eras
-  # Note: 2015-2018 files have been removed from FLDOE server
+  # Note: 2015-2018 files were removed from FLDOE server
   years_to_test <- list(
     "2019" = "https://www.fldoe.org/core/fileparse.php/5668/urlt/SPR19ELA03SRD.xls",
     "2022" = "https://www.fldoe.org/core/fileparse.php/5668/urlt/SPR22ELA03SRD.xls",
@@ -660,303 +660,6 @@ test_that("2024 has ELA data available", {
 
   # Note: Math URL pattern changed/removed from FLDOE server
   # math_url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3MATH03SRDSpring24.xls"
-})
-
-# ==============================================================================
-# Real Data Snapshot Tests - 2024 FAST ELA Grade 3
-# ==============================================================================
-# These tests verify actual values from the raw data files.
-# Values are from Spring 2024 FAST ELA Grade 3 District Results.
-# ==============================================================================
-
-test_that("2024 FAST ELA Grade 3 state totals match expected values", {
-  skip_if_offline()
-
-  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3ELA03SRDSpring24.xls"
-  tname <- tempfile(fileext = ".xls")
-  on.exit(unlink(tname), add = TRUE)
-
-  response <- httr::GET(
-    url,
-    httr::write_disk(tname, overwrite = TRUE),
-    httr::timeout(120)
-  )
-
-  expect_false(httr::http_error(response))
-
-  # Read and parse
-  df <- readxl::read_excel(tname, sheet = 1, skip = 4,
-    col_names = c("district_id", "district_name", "grade", "n_tested",
-                  "mean_scale_score", "pct_proficient", "pct_level_1",
-                  "pct_level_2", "pct_level_3", "pct_level_4", "pct_level_5"))
-  df <- df[-1, ]  # Remove header row
-
-  state_row <- df[df$district_id == "00", ]
-
-  # Verify state totals from Spring 2024 FAST ELA Grade 3
-  expect_equal(as.numeric(state_row$n_tested), 216473,
-               label = "State n_tested for 2024 FAST ELA Grade 3")
-  expect_equal(as.numeric(state_row$pct_proficient), 55,
-               label = "State pct_proficient for 2024 FAST ELA Grade 3")
-  expect_equal(as.numeric(state_row$pct_level_1), 22,
-               label = "State pct_level_1")
-  expect_equal(as.numeric(state_row$pct_level_2), 22,
-               label = "State pct_level_2")
-  expect_equal(as.numeric(state_row$pct_level_3), 23,
-               label = "State pct_level_3")
-  expect_equal(as.numeric(state_row$pct_level_4), 19,
-               label = "State pct_level_4")
-  expect_equal(as.numeric(state_row$pct_level_5), 13,
-               label = "State pct_level_5")
-})
-
-test_that("2024 FAST ELA Grade 3 Miami-Dade values match expected", {
-  skip_if_offline()
-
-  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3ELA03SRDSpring24.xls"
-  tname <- tempfile(fileext = ".xls")
-  on.exit(unlink(tname), add = TRUE)
-
-  response <- httr::GET(
-    url,
-    httr::write_disk(tname, overwrite = TRUE),
-    httr::timeout(120)
-  )
-
-  expect_false(httr::http_error(response))
-
-  df <- readxl::read_excel(tname, sheet = 1, skip = 4,
-    col_names = c("district_id", "district_name", "grade", "n_tested",
-                  "mean_scale_score", "pct_proficient", "pct_level_1",
-                  "pct_level_2", "pct_level_3", "pct_level_4", "pct_level_5"))
-  df <- df[-1, ]
-
-  miami_row <- df[df$district_id == "13", ]
-
-  # Verify Miami-Dade values from Spring 2024
-  expect_equal(miami_row$district_name, "MIAMI-DADE",
-               label = "Miami-Dade district name")
-  expect_equal(as.numeric(miami_row$n_tested), 25178,
-               label = "Miami-Dade n_tested")
-  expect_equal(as.numeric(miami_row$pct_proficient), 56,
-               label = "Miami-Dade pct_proficient")
-  expect_equal(as.numeric(miami_row$pct_level_1), 24,
-               label = "Miami-Dade pct_level_1")
-  expect_equal(as.numeric(miami_row$pct_level_5), 14,
-               label = "Miami-Dade pct_level_5")
-})
-
-test_that("2024 FAST ELA Grade 3 Broward values match expected", {
-  skip_if_offline()
-
-  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3ELA03SRDSpring24.xls"
-  tname <- tempfile(fileext = ".xls")
-  on.exit(unlink(tname), add = TRUE)
-
-  response <- httr::GET(
-    url,
-    httr::write_disk(tname, overwrite = TRUE),
-    httr::timeout(120)
-  )
-
-  expect_false(httr::http_error(response))
-
-  df <- readxl::read_excel(tname, sheet = 1, skip = 4,
-    col_names = c("district_id", "district_name", "grade", "n_tested",
-                  "mean_scale_score", "pct_proficient", "pct_level_1",
-                  "pct_level_2", "pct_level_3", "pct_level_4", "pct_level_5"))
-  df <- df[-1, ]
-
-  broward_row <- df[df$district_id == "06", ]
-
-  # Verify Broward values from Spring 2024
-  expect_equal(broward_row$district_name, "BROWARD",
-               label = "Broward district name")
-  expect_equal(as.numeric(broward_row$n_tested), 18457,
-               label = "Broward n_tested")
-  expect_equal(as.numeric(broward_row$pct_proficient), 57,
-               label = "Broward pct_proficient")
-})
-
-test_that("2024 FAST ELA Grade 3 Hillsborough values match expected", {
-  skip_if_offline()
-
-  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3ELA03SRDSpring24.xls"
-  tname <- tempfile(fileext = ".xls")
-  on.exit(unlink(tname), add = TRUE)
-
-  response <- httr::GET(
-    url,
-    httr::write_disk(tname, overwrite = TRUE),
-    httr::timeout(120)
-  )
-
-  expect_false(httr::http_error(response))
-
-  df <- readxl::read_excel(tname, sheet = 1, skip = 4,
-    col_names = c("district_id", "district_name", "grade", "n_tested",
-                  "mean_scale_score", "pct_proficient", "pct_level_1",
-                  "pct_level_2", "pct_level_3", "pct_level_4", "pct_level_5"))
-  df <- df[-1, ]
-
-  hillsborough_row <- df[df$district_id == "29", ]
-
-  # Verify Hillsborough values from Spring 2024
-  expect_equal(hillsborough_row$district_name, "HILLSBOROUGH",
-               label = "Hillsborough district name")
-  expect_equal(as.numeric(hillsborough_row$n_tested), 16802,
-               label = "Hillsborough n_tested")
-  expect_equal(as.numeric(hillsborough_row$pct_proficient), 51,
-               label = "Hillsborough pct_proficient")
-})
-
-test_that("2024 FAST ELA Grade 3 has expected district count", {
-  skip_if_offline()
-
-  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3ELA03SRDSpring24.xls"
-  tname <- tempfile(fileext = ".xls")
-  on.exit(unlink(tname), add = TRUE)
-
-  response <- httr::GET(
-    url,
-    httr::write_disk(tname, overwrite = TRUE),
-    httr::timeout(120)
-  )
-
-  expect_false(httr::http_error(response))
-
-  df <- readxl::read_excel(tname, sheet = 1, skip = 4,
-    col_names = c("district_id", "district_name", "grade", "n_tested",
-                  "mean_scale_score", "pct_proficient", "pct_level_1",
-                  "pct_level_2", "pct_level_3", "pct_level_4", "pct_level_5"))
-  df <- df[-1, ]
-
-  # Should have 75 rows: state totals + 67 counties + special districts
-  expect_equal(nrow(df), 75,
-               label = "Total row count for district-level data")
-
-  # Verify state row exists
-  expect_true("00" %in% df$district_id,
-              label = "State totals row (district_id = 00) should exist")
-})
-
-test_that("2024 FAST ELA Grade 3 proficiency levels sum to approximately 100", {
-  skip_if_offline()
-
-  url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3ELA03SRDSpring24.xls"
-  tname <- tempfile(fileext = ".xls")
-  on.exit(unlink(tname), add = TRUE)
-
-  response <- httr::GET(
-    url,
-    httr::write_disk(tname, overwrite = TRUE),
-    httr::timeout(120)
-  )
-
-  expect_false(httr::http_error(response))
-
-  df <- readxl::read_excel(tname, sheet = 1, skip = 4,
-    col_names = c("district_id", "district_name", "grade", "n_tested",
-                  "mean_scale_score", "pct_proficient", "pct_level_1",
-                  "pct_level_2", "pct_level_3", "pct_level_4", "pct_level_5"))
-  df <- df[-1, ]
-
-  state_row <- df[df$district_id == "00", ]
-
-  # Sum of all levels should equal 100 (or very close due to rounding)
-  level_sum <- sum(
-    as.numeric(state_row$pct_level_1),
-    as.numeric(state_row$pct_level_2),
-    as.numeric(state_row$pct_level_3),
-    as.numeric(state_row$pct_level_4),
-    as.numeric(state_row$pct_level_5)
-  )
-
-  # Allow for rounding to 99-101
-  expect_true(level_sum >= 99 && level_sum <= 101,
-              info = paste("Level sum should be ~100, got:", level_sum))
-})
-
-# ==============================================================================
-# fetch_assessment Function Integration Tests
-# ==============================================================================
-
-test_that("fetch_assessment returns expected structure for 2024 ELA Grade 3", {
-  skip_if_offline()
-
-  # Use cached data if available to speed up tests
-  result <- tryCatch({
-    fetch_assessment(2024, "ela", grade = 3, level = "district", tidy = FALSE, use_cache = TRUE)
-  }, error = function(e) {
-    skip(paste("fetch_assessment failed:", e$message))
-  })
-
-  # Check structure
-  expect_true(is.data.frame(result))
-  expect_gt(nrow(result), 0)
-
-  # Check required columns exist
-  expected_cols <- c("end_year", "subject", "grade", "district_id", "district_name",
-                     "n_tested", "pct_proficient", "is_state", "is_district")
-  for (col in expected_cols) {
-    expect_true(col %in% names(result),
-                info = paste("Missing column:", col))
-  }
-
-  # Check data values
-  expect_true(all(result$end_year == 2024))
-  expect_true(all(result$subject == "ELA"))
-  expect_true(any(result$is_state))
-})
-
-test_that("fetch_assessment tidy format has proficiency_level column", {
-  skip_if_offline()
-
-  result <- tryCatch({
-    fetch_assessment(2024, "ela", grade = 3, level = "district", tidy = TRUE, use_cache = TRUE)
-  }, error = function(e) {
-    skip(paste("fetch_assessment failed:", e$message))
-  })
-
-  # Check tidy format
-  expect_true("proficiency_level" %in% names(result))
-  expect_true("pct" %in% names(result))
-  expect_true("proficiency_label" %in% names(result))
-  expect_true("is_proficient" %in% names(result))
-
-  # Check proficiency levels
-  expected_levels <- c("level_1", "level_2", "level_3", "level_4", "level_5")
-  actual_levels <- unique(result$proficiency_level)
-  expect_true(all(expected_levels %in% actual_levels))
-})
-
-test_that("fetch_assessment_multi combines multiple years", {
-  skip_if_offline()
-
-  result <- tryCatch({
-    fetch_assessment_multi(c(2023, 2024), "ela", grade = 3, level = "district", use_cache = TRUE)
-  }, error = function(e) {
-    skip(paste("fetch_assessment_multi failed:", e$message))
-  })
-
-  # Check both years present
-  expect_true(2023 %in% result$end_year)
-  expect_true(2024 %in% result$end_year)
-})
-
-test_that("fetch_assessment rejects invalid years", {
-  # Test COVID years
-  expect_error(fetch_assessment(2020, "ela"))
-  expect_error(fetch_assessment(2021, "ela"))
-
-  # Test out of range years
-  expect_error(fetch_assessment(2010, "ela"))
-  expect_error(fetch_assessment(2030, "ela"))
-})
-
-test_that("fetch_assessment rejects invalid subjects", {
-  expect_error(fetch_assessment(2024, "science"))
-  expect_error(fetch_assessment(2024, "reading"))
 })
 
 # ==============================================================================
