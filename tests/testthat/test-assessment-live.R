@@ -51,6 +51,7 @@ test_that("2024 FAST ELA Grade 3 district URL is available", {
 
 test_that("2024 FAST Math Grade 3 district URL is available", {
   skip_if_offline()
+  skip("2024 Math files removed from FLDOE server")
 
   url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3MATH03SRDSpring24.xls"
 
@@ -62,6 +63,7 @@ test_that("2024 FAST Math Grade 3 district URL is available", {
 
 test_that("2023 FAST ELA Grade 3 district URL is available", {
   skip_if_offline()
+  skip("2023 files removed from FLDOE server")
 
   url <- "https://www.fldoe.org/core/fileparse.php/5668/urlt/3ELA03SRDSpring23.xls"
 
