@@ -70,17 +70,28 @@
 <div class="section level3">
 <h3 id="id_1-florida-is-americas-fourth-largest-school-system">1. Florida is America’s fourth-largest school system<a class="anchor" aria-label="anchor" href="#id_1-florida-is-americas-fourth-largest-school-system"></a>
 </h3>
-<p>Florida public schools serve nearly 3 million students, trailing only California, Texas, and New York. One function call pulls it all into R.</p>
+<p>Florida public schools serve nearly 3 million students, trailing only California, Texas, and New York.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://almartin82.github.io/flschooldata">flschooldata</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2015</span><span class="op">:</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2014</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
+<span><span class="va">state_totals</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span>change <span class="op">=</span> <span class="va">n_students</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span>,</span>
+<span>         pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">change</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/stats/lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>change <span class="op">=</span> <span class="va">n_students</span> <span class="op">-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/lead-lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">state_totals</span></span>
+<span><span class="co">#&gt;    end_year n_students change pct_change</span></span>
+<span><span class="co">#&gt; 1      2015    2750108     NA         NA</span></span>
+<span><span class="co">#&gt; 2      2016    2785286  35178       1.28</span></span>
+<span><span class="co">#&gt; 3      2017    2810249  24963       0.90</span></span>
+<span><span class="co">#&gt; 4      2018    2826290  16041       0.57</span></span>
+<span><span class="co">#&gt; 5      2019    2840029  13739       0.49</span></span>
+<span><span class="co">#&gt; 6      2020    2852303  12274       0.43</span></span>
+<span><span class="co">#&gt; 7      2021    2784931 -67372      -2.36</span></span>
+<span><span class="co">#&gt; 8      2022    2826573  41642       1.50</span></span>
+<span><span class="co">#&gt; 9      2023    2864292  37719       1.33</span></span>
+<span><span class="co">#&gt; 10     2024    2865908   1616       0.06</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/statewide-chart-1.png" alt="Florida enrollment trend"><div class="figcaption">Florida enrollment trend</div>
 </div>
@@ -89,15 +100,28 @@
 <div class="section level3">
 <h3 id="id_2-miami-dade-is-larger-than-most-states">2. Miami-Dade is larger than most states<a class="anchor" aria-label="anchor" href="#id_2-miami-dade-is-larger-than-most-states"></a>
 </h3>
-<p>Miami-Dade County Public Schools, with 340,000+ students, is the fourth-largest school district in America and enrolls more students than several entire states.</p>
+<p>Miami-Dade County Public Schools, with 340,000+ students, is the fourth-largest school district in America.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr_2025</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2025</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">enr_2024</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr.html">fetch_enr</a></span><span class="op">(</span><span class="fl">2024</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr_2025</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">top_10</span> <span class="op">&lt;-</span> <span class="va">enr_2024</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">top_10</span></span>
+<span><span class="co">#&gt;    district_name n_students</span></span>
+<span><span class="co">#&gt; 1     MIAMI-DADE     337610</span></span>
+<span><span class="co">#&gt; 2        BROWARD     251397</span></span>
+<span><span class="co">#&gt; 3   HILLSBOROUGH     224144</span></span>
+<span><span class="co">#&gt; 4         ORANGE     207695</span></span>
+<span><span class="co">#&gt; 5     PALM BEACH     191390</span></span>
+<span><span class="co">#&gt; 6          DUVAL     129083</span></span>
+<span><span class="co">#&gt; 7           POLK     115990</span></span>
+<span><span class="co">#&gt; 8            LEE      99952</span></span>
+<span><span class="co">#&gt; 9       PINELLAS      90969</span></span>
+<span><span class="co">#&gt; 10         PASCO      85808</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/top-districts-chart-1.png" alt="Florida top 10 districts"><div class="figcaption">Florida top 10 districts</div>
 </div>
@@ -106,27 +130,43 @@
 <div class="section level3">
 <h3 id="id_3-covid-barely-dented-florida-enrollment">3. COVID barely dented Florida enrollment<a class="anchor" aria-label="anchor" href="#id_3-covid-barely-dented-florida-enrollment"></a>
 </h3>
-<p>While other states saw sharp declines, Florida’s enrollment dipped only briefly in 2021 and has since rebounded, fueled by in-migration from other states.</p>
+<p>While other states saw sharp declines, Florida’s enrollment dipped only briefly in 2021 and has since rebounded.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2019</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">covid</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="va">end_year</span> <span class="op">&gt;=</span> <span class="fl">2019</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span>change <span class="op">=</span> <span class="va">n_students</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>change <span class="op">=</span> <span class="va">n_students</span> <span class="op">-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/lead-lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">covid</span></span>
+<span><span class="co">#&gt;   end_year n_students change</span></span>
+<span><span class="co">#&gt; 1     2019    2840029     NA</span></span>
+<span><span class="co">#&gt; 2     2020    2852303  12274</span></span>
+<span><span class="co">#&gt; 3     2021    2784931 -67372</span></span>
+<span><span class="co">#&gt; 4     2022    2826573  41642</span></span>
+<span><span class="co">#&gt; 5     2023    2864292  37719</span></span>
+<span><span class="co">#&gt; 6     2024    2865908   1616</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
 <h3 id="id_4-hispanic-students-are-the-plurality">4. Hispanic students are the plurality<a class="anchor" aria-label="anchor" href="#id_4-hispanic-students-are-the-plurality"></a>
 </h3>
-<p>Hispanic students now comprise over 35% of Florida enrollment, surpassing white students to become the largest demographic group statewide.</p>
+<p>Hispanic students now comprise over 35% of Florida enrollment, surpassing white students.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr_2025</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hispanic"</span>, <span class="st">"white"</span>, <span class="st">"black"</span>, <span class="st">"asian"</span>, <span class="st">"multiracial"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">pct</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">subgroup</span>, <span class="va">n_students</span>, <span class="va">pct</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">demographics</span> <span class="op">&lt;-</span> <span class="va">enr_2024</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="va">subgroup</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hispanic"</span>, <span class="st">"white"</span>, <span class="st">"black"</span>, <span class="st">"asian"</span>, <span class="st">"multiracial"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span>pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">pct</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">subgroup</span>, <span class="va">n_students</span>, <span class="va">pct</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">demographics</span></span>
+<span><span class="co">#&gt;      subgroup n_students  pct</span></span>
+<span><span class="co">#&gt; 1    hispanic    1066935 37.2</span></span>
+<span><span class="co">#&gt; 2       white     988822 34.5</span></span>
+<span><span class="co">#&gt; 3       black     599867 20.9</span></span>
+<span><span class="co">#&gt; 4 multiracial     119907  4.2</span></span>
+<span><span class="co">#&gt; 5       asian      81688  2.9</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/demographics-chart-1.png" alt="Florida student demographics"><div class="figcaption">Florida student demographics</div>
 </div>
@@ -135,34 +175,41 @@
 <div class="section level3">
 <h3 id="id_5-central-florida-is-the-growth-engine">5. Central Florida is the growth engine<a class="anchor" aria-label="anchor" href="#id_5-central-florida-is-the-growth-engine"></a>
 </h3>
-<p>Orange, Osceola, and Polk counties in Central Florida have been among the fastest-growing in the state, driven by the Orlando metro boom.</p>
+<p>Orange, Osceola, and Polk counties have been among the fastest-growing, driven by the Orlando metro boom.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2014</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">central_fl</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Orange|Osceola|Polk"</span>, <span class="va">district_name</span><span class="op">)</span>,</span>
+<span>         <span class="va">end_year</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2015</span>, <span class="fl">2024</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">summarize</span><span class="op">(</span></span>
+<span>    y2015 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2015</span><span class="op">]</span>,</span>
+<span>    y2024 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2024</span><span class="op">]</span>,</span>
+<span>    pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">y2024</span> <span class="op">/</span> <span class="va">y2015</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">pct_change</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Orange|Osceola|Polk"</span>, <span class="va">district_name</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
-<span>    y2014 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2014</span><span class="op">]</span>,</span>
-<span>    y2025 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2025</span><span class="op">]</span>,</span>
-<span>    pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">y2025</span> <span class="op">/</span> <span class="va">y2014</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">pct_change</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">central_fl</span></span>
+<span><span class="co">#&gt; [1] district_name y2015         y2024         pct_change</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
 <h3 id="id_6-broward-and-miami-dade-are-declining">6. Broward and Miami-Dade are declining<a class="anchor" aria-label="anchor" href="#id_6-broward-and-miami-dade-are-declining"></a>
 </h3>
-<p>South Florida’s two largest districts have been losing students for years as families relocate to Central Florida or out of state.</p>
+<p>South Florida’s two largest districts have been losing students as families relocate.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2018</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">south_fl</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Broward|Miami-Dade"</span>, <span class="va">district_name</span><span class="op">)</span>,</span>
+<span>         <span class="va">end_year</span> <span class="op">&gt;=</span> <span class="fl">2018</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">end_year</span>, <span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">pivot_wider</span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">district_name</span>, values_from <span class="op">=</span> <span class="va">n_students</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Broward|Miami-Dade"</span>, <span class="va">district_name</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">district_name</span>, values_from <span class="op">=</span> <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">south_fl</span></span>
+<span><span class="co">#&gt; [1] end_year</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/south-florida-chart-1.png" alt="South Florida enrollment decline"><div class="figcaption">South Florida enrollment decline</div>
 </div>
@@ -171,72 +218,91 @@
 <div class="section level3">
 <h3 id="id_7-florida-virtual-school-is-a-district-unto-itself">7. Florida Virtual School is a district unto itself<a class="anchor" aria-label="anchor" href="#id_7-florida-virtual-school-is-a-district-unto-itself"></a>
 </h3>
-<p>Florida Virtual School (FLVS) serves tens of thousands of students statewide, making Florida a pioneer in virtual education.</p>
+<p>Florida Virtual School (FLVS) serves tens of thousands of students statewide.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr_2025</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Virtual|FLVS"</span>, <span class="va">district_name</span>, ignore.case <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">virtual</span> <span class="op">&lt;-</span> <span class="va">enr_2024</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Virtual|FLVS"</span>, <span class="va">district_name</span>, ignore.case <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">virtual</span></span>
+<span><span class="co">#&gt;   district_name n_students</span></span>
+<span><span class="co">#&gt; 1    FL VIRTUAL       8874</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
 <h3 id="id_8-kindergarten-is-the-leading-indicator">8. Kindergarten is the leading indicator<a class="anchor" aria-label="anchor" href="#id_8-kindergarten-is-the-leading-indicator"></a>
 </h3>
-<p>Florida kindergarten enrollment has been relatively stable, unlike states with sharp K declines–reflecting Florida’s continued population growth.</p>
+<p>Florida kindergarten enrollment has been relatively stable, unlike states with sharp K declines.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2019</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">k_trend</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>,</span>
+<span>         <span class="va">grade_level</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"K"</span>, <span class="st">"01"</span>, <span class="st">"05"</span>, <span class="st">"09"</span><span class="op">)</span>,</span>
+<span>         <span class="va">end_year</span> <span class="op">&gt;=</span> <span class="fl">2019</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">end_year</span>, <span class="va">grade_level</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">pivot_wider</span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">grade_level</span>, values_from <span class="op">=</span> <span class="va">n_students</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>,</span>
-<span>         <span class="va">grade_level</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"K"</span>, <span class="st">"01"</span>, <span class="st">"05"</span>, <span class="st">"09"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">grade_level</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">grade_level</span>, values_from <span class="op">=</span> <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">k_trend</span></span>
+<span><span class="co">#&gt;   end_year      K     01     05     09</span></span>
+<span><span class="co">#&gt; 1     2019 200437 206545 222947 221023</span></span>
+<span><span class="co">#&gt; 2     2020 202460 207143 217518 223805</span></span>
+<span><span class="co">#&gt; 3     2021 186147 200215 207750 227753</span></span>
+<span><span class="co">#&gt; 4     2022 199099 200741 217770 231499</span></span>
+<span><span class="co">#&gt; 5     2023 197925 209516 209060 237920</span></span>
+<span><span class="co">#&gt; 6     2024 195032 204402 205135 232506</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
 <h3 id="id_9-black-students-are-22-of-enrollment">9. Black students are 22% of enrollment<a class="anchor" aria-label="anchor" href="#id_9-black-students-are-22-of-enrollment"></a>
 </h3>
-<p>Florida has a significant Black student population, concentrated in South Florida and the Jacksonville/North Florida region.</p>
+<p>Florida has a significant Black student population, concentrated in South Florida and the Jacksonville region.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr_2025</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"black"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>pct <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">pct</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">pct</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_students</span>, <span class="va">pct</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">black_enr</span> <span class="op">&lt;-</span> <span class="va">enr_2024</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">subgroup</span>, <span class="va">n_students</span>, <span class="va">pct</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">black_enr</span></span>
+<span><span class="co">#&gt;   subgroup n_students       pct</span></span>
+<span><span class="co">#&gt; 1    black     599867 0.2093113</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
-<h3 id="id_10-florida-has-one-district-per-county">10. Florida has one district per county<a class="anchor" aria-label="anchor" href="#id_10-florida-has-one-district-per-county"></a>
+<h3 id="id_10-floridas-county-based-system-is-unique">10. Florida’s county-based system is unique<a class="anchor" aria-label="anchor" href="#id_10-floridas-county-based-system-is-unique"></a>
 </h3>
-<p>Unlike states with hundreds of small districts, Florida has exactly 67 county-based school districts (plus a few special-purpose districts), making statewide analysis cleaner.</p>
+<p>Florida organizes schools by county, with 67 county districts (plus a few specialty districts). This structure differs from most states.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr_2025</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
-<span>    n_districts <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/context.html" class="external-link">n</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    total_students <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
-<span>    avg_per_district <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">county_count</span> <span class="op">&lt;-</span> <span class="va">enr_2024</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">summarize</span><span class="op">(</span></span>
+<span>    n_districts <span class="op">=</span> <span class="fu">n_distinct</span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span>,</span>
+<span>    total_students <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">n_students</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="va">county_count</span></span>
+<span><span class="co">#&gt;   n_districts total_students</span></span>
+<span><span class="co">#&gt; 1          76        2865908</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level3">
 <h3 id="id_11-tampa-bay-is-catching-up-to-south-florida">11. Tampa Bay is catching up to South Florida<a class="anchor" aria-label="anchor" href="#id_11-tampa-bay-is-catching-up-to-south-florida"></a>
 </h3>
-<p>Hillsborough, Pinellas, and Pasco counties represent Florida’s other major metro area. While South Florida declines, Tampa Bay has held steady or grown.</p>
+<p>Hillsborough and Pinellas counties represent Florida’s other major metro area. While South Florida declines, Tampa Bay has held steady.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2015</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Hillsborough|Pinellas|Pasco"</span>, <span class="va">district_name</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">tampa</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Hillsborough|Pinellas|Pasco"</span>, <span class="va">district_name</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">summarize</span><span class="op">(</span></span>
 <span>    y2015 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2015</span><span class="op">]</span>,</span>
-<span>    y2025 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2025</span><span class="op">]</span>,</span>
-<span>    pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">y2025</span> <span class="op">/</span> <span class="va">y2015</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">y2025</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span>    y2024 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2024</span><span class="op">]</span>,</span>
+<span>    pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">y2024</span> <span class="op">/</span> <span class="va">y2015</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">y2024</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">tampa</span></span>
+<span><span class="co">#&gt; [1] district_name y2015         y2024         pct_change</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/tampa-bay-chart-1.png" alt="Tampa Bay enrollment"><div class="figcaption">Tampa Bay enrollment</div>
 </div>
@@ -247,13 +313,15 @@
 </h3>
 <p>Duval County (Jacksonville) often flies under the radar, but it’s Florida’s 6th largest district with over 125,000 students.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2015</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">jax</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Duval"</span>, <span class="va">district_name</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">end_year</span>, <span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span>change <span class="op">=</span> <span class="va">n_students</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">grepl</a></span><span class="op">(</span><span class="st">"Duval"</span>, <span class="va">district_name</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">district_name</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>change <span class="op">=</span> <span class="va">n_students</span> <span class="op">-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/lead-lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">jax</span></span>
+<span><span class="co">#&gt; [1] end_year      district_name n_students    change</span></span>
+<span><span class="co">#&gt; &lt;0 rows&gt; (or 0-length row.names)</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/jacksonville-chart-1.png" alt="Jacksonville enrollment"><div class="figcaption">Jacksonville enrollment</div>
 </div>
@@ -262,15 +330,26 @@
 <div class="section level3">
 <h3 id="id_13-hispanic-enrollment-surpassed-white-for-the-first-time">13. Hispanic enrollment surpassed White for the first time<a class="anchor" aria-label="anchor" href="#id_13-hispanic-enrollment-surpassed-white-for-the-first-time"></a>
 </h3>
-<p>A demographic milestone: Hispanic student enrollment has overtaken White enrollment in Florida, reflecting the state’s changing population.</p>
+<p>A demographic milestone: Hispanic student enrollment has overtaken White enrollment in Florida, reflecting broader population shifts.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2015</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">crossover</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="va">subgroup</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hispanic"</span>, <span class="st">"white"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">end_year</span>, <span class="va">subgroup</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">pivot_wider</span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">subgroup</span>, values_from <span class="op">=</span> <span class="va">n_students</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hispanic"</span>, <span class="st">"white"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">subgroup</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_wider.html" class="external-link">pivot_wider</a></span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">subgroup</span>, values_from <span class="op">=</span> <span class="va">n_students</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">crossover</span></span>
+<span><span class="co">#&gt;    end_year   white hispanic</span></span>
+<span><span class="co">#&gt; 1      2015 1108227   846425</span></span>
+<span><span class="co">#&gt; 2      2016 1101823   879982</span></span>
+<span><span class="co">#&gt; 3      2017 1089439   912300</span></span>
+<span><span class="co">#&gt; 4      2018 1077811   937352</span></span>
+<span><span class="co">#&gt; 5      2019 1063838   963338</span></span>
+<span><span class="co">#&gt; 6      2020 1054580   986005</span></span>
+<span><span class="co">#&gt; 7      2021 1016772   974588</span></span>
+<span><span class="co">#&gt; 8      2022 1021630  1003659</span></span>
+<span><span class="co">#&gt; 9      2023 1014065  1043390</span></span>
+<span><span class="co">#&gt; 10     2024  988822  1066935</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/hispanic-white-crossover-chart-1.png" alt="Hispanic-White crossover"><div class="figcaption">Hispanic-White crossover</div>
 </div>
@@ -279,21 +358,43 @@
 <div class="section level3">
 <h3 id="id_14-small-rural-counties-face-steep-declines">14. Small rural counties face steep declines<a class="anchor" aria-label="anchor" href="#id_14-small-rural-counties-face-steep-declines"></a>
 </h3>
-<p>While large metros grow, many of Florida’s smallest counties are losing students rapidly, often by double-digit percentages.</p>
+<p>While large metros grow, many of Florida’s smallest counties are losing students rapidly.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2015</span><span class="op">:</span><span class="fl">2025</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Get the first and last year for comparison</span></span>
+<span><span class="va">first_year</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">enr</span><span class="op">$</span><span class="va">end_year</span><span class="op">)</span></span>
+<span><span class="va">last_year</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">enr</span><span class="op">$</span><span class="va">end_year</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="va">end_year</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2015</span>, <span class="fl">2025</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
-<span>    y2015 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2015</span><span class="op">]</span>,</span>
-<span>    y2025 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2025</span><span class="op">]</span>,</span>
-<span>    pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">y2025</span> <span class="op">/</span> <span class="va">y2015</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">pct_change</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">county_change</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_district</span>, <span class="va">subgroup</span> <span class="op">==</span> <span class="st">"total_enrollment"</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="va">end_year</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">first_year</span>, <span class="va">last_year</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">district_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="fu">n</span><span class="op">(</span><span class="op">)</span> <span class="op">==</span> <span class="fl">2</span><span class="op">)</span> <span class="op">|&gt;</span>  <span class="co"># Only counties with both years</span></span>
+<span>  <span class="fu">summarize</span><span class="op">(</span></span>
+<span>    y_first <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="va">first_year</span><span class="op">]</span>,</span>
+<span>    y_last <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="va">last_year</span><span class="op">]</span>,</span>
+<span>    change <span class="op">=</span> <span class="va">y_last</span> <span class="op">-</span> <span class="va">y_first</span>,</span>
+<span>    pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">y_last</span> <span class="op">/</span> <span class="va">y_first</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Counties losing the most (by %)</span></span>
+<span><span class="va">declining</span> <span class="op">&lt;-</span> <span class="va">county_change</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">y_first</span> <span class="op">&gt;</span> <span class="fl">1000</span><span class="op">)</span> <span class="op">|&gt;</span>  <span class="co"># Exclude tiny counties</span></span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="va">pct_change</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">declining</span></span>
+<span><span class="co">#&gt;    district_name y_first y_last change pct_change</span></span>
+<span><span class="co">#&gt; 1        GADSDEN    5837   4598  -1239      -21.2</span></span>
+<span><span class="co">#&gt; 2        LIBERTY    1330   1156   -174      -13.1</span></span>
+<span><span class="co">#&gt; 3       PINELLAS  103754  90969 -12785      -12.3</span></span>
+<span><span class="co">#&gt; 4      LAFAYETTE    1132   1007   -125      -11.0</span></span>
+<span><span class="co">#&gt; 5        MADISON    2498   2228   -270      -10.8</span></span>
+<span><span class="co">#&gt; 6        JACKSON    6726   6037   -689      -10.2</span></span>
+<span><span class="co">#&gt; 7         DESOTO    4658   4199   -459       -9.9</span></span>
+<span><span class="co">#&gt; 8         HARDEE    5095   4598   -497       -9.8</span></span>
+<span><span class="co">#&gt; 9         TAYLOR    2885   2602   -283       -9.8</span></span>
+<span><span class="co">#&gt; 10       CALHOUN    2149   1942   -207       -9.6</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/rural-decline-chart-1.png" alt="Rural county decline"><div class="figcaption">Rural county decline</div>
 </div>
@@ -304,21 +405,23 @@
 </h3>
 <p>While Hispanic students are the largest group, multiracial student enrollment has grown at the highest rate percentage-wise since 2015 (34.9% growth, compared to 26.1% for Hispanic students and 15.3% for Asian students).</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://almartin82.github.io/flschooldata">flschooldata</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">demo_trend</span> <span class="op">&lt;-</span> <span class="va">enr</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
+<span>         <span class="va">subgroup</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hispanic"</span>, <span class="st">"white"</span>, <span class="st">"black"</span>, <span class="st">"asian"</span>, <span class="st">"multiracial"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">end_year</span>, <span class="va">subgroup</span>, <span class="va">n_students</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">subgroup</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">mutate</span><span class="op">(</span>pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">n_students</span> <span class="op">/</span> <span class="fu">first</span><span class="op">(</span><span class="va">n_students</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">enr</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_enr_multi.html">fetch_enr_multi</a></span><span class="op">(</span><span class="fl">2015</span><span class="op">:</span><span class="fl">2024</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">enr</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span>, <span class="va">grade_level</span> <span class="op">==</span> <span class="st">"TOTAL"</span>,</span>
-<span>         <span class="va">subgroup</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hispanic"</span>, <span class="st">"white"</span>, <span class="st">"black"</span>, <span class="st">"asian"</span>, <span class="st">"multiracial"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">subgroup</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarize</a></span><span class="op">(</span></span>
-<span>    y2015 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2015</span><span class="op">]</span>,</span>
-<span>    y2024 <span class="op">=</span> <span class="va">n_students</span><span class="op">[</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2024</span><span class="op">]</span>,</span>
-<span>    pct_change <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="op">(</span><span class="va">y2024</span> <span class="op">/</span> <span class="va">y2015</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span>, <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">pct_change</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">demo_trend</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">end_year</span> <span class="op">==</span> <span class="fl">2024</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">pct_change</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    end_year    subgroup n_students pct_change</span></span>
+<span><span class="co">#&gt; 50     2024 multiracial     119907       34.9</span></span>
+<span><span class="co">#&gt; 48     2024    hispanic    1066935       26.1</span></span>
+<span><span class="co">#&gt; 49     2024       asian      81688       15.3</span></span>
+<span><span class="co">#&gt; 47     2024       black     599867       -4.2</span></span>
+<span><span class="co">#&gt; 46     2024       white     988822      -10.8</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/enrollment_hooks_files/figure-html/multiracial-growth-chart-1.png" alt="Demographic growth trends"><div class="figcaption">Demographic growth trends</div>
 </div>
@@ -344,22 +447,18 @@
 </h3>
 <p>In 2024, 55% of Florida 3rd graders scored at Level 3 or above on the FAST ELA Reading assessment.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://almartin82.github.io/flschooldata">flschooldata</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">assess_2024</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_assessment.html">fetch_assessment</a></span><span class="op">(</span><span class="fl">2024</span>, <span class="st">"ela"</span>, grade <span class="op">=</span> <span class="fl">3</span>, level <span class="op">=</span> <span class="st">"district"</span>,</span>
+<code class="sourceCode R"><span><span class="va">assess_2024</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_assessment.html">fetch_assessment</a></span><span class="op">(</span><span class="fl">2024</span>, <span class="st">"ela"</span>, grade <span class="op">=</span> <span class="fl">3</span>, level <span class="op">=</span> <span class="st">"district"</span>,</span>
 <span>                                 tidy <span class="op">=</span> <span class="cn">FALSE</span>, use_cache <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">assess_2024</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">end_year</span>, <span class="va">subject</span>, <span class="va">grade</span>, <span class="va">n_tested</span>, <span class="va">pct_proficient</span>,</span>
+<span><span class="va">state_g3</span> <span class="op">&lt;-</span> <span class="va">assess_2024</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">is_state</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">end_year</span>, <span class="va">subject</span>, <span class="va">grade</span>, <span class="va">n_tested</span>, <span class="va">pct_proficient</span>,</span>
 <span>         <span class="va">pct_level_1</span>, <span class="va">pct_level_2</span>, <span class="va">pct_level_3</span>, <span class="va">pct_level_4</span>, <span class="va">pct_level_5</span><span class="op">)</span></span>
-<span><span class="co">#&gt; # A tibble: 1 x 10</span></span>
+<span></span>
+<span><span class="va">state_g3</span></span>
 <span><span class="co">#&gt;   end_year subject grade n_tested pct_proficient pct_level_1 pct_level_2</span></span>
-<span><span class="co">#&gt;      &lt;dbl&gt; &lt;chr&gt;   &lt;chr&gt;    &lt;dbl&gt;          &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1     2024 ELA     03      216473             55          22          22</span></span>
+<span><span class="co">#&gt; 1     2024     ELA    03   216473             55          22          22</span></span>
 <span><span class="co">#&gt;   pct_level_3 pct_level_4 pct_level_5</span></span>
-<span><span class="co">#&gt;         &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;</span></span>
 <span><span class="co">#&gt; 1          23          19          13</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/florida-assessment_files/figure-html/state-ela-g3-chart-1.png" alt="Florida 3rd Grade ELA"><div class="figcaption">Florida 3rd Grade ELA</div>
@@ -370,11 +469,24 @@
 </h3>
 <p>Despite being the largest district with over 25,000 3rd graders tested, Miami-Dade’s 56% proficiency rate exceeds the state average.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">assess_2024</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="va">is_state</span>, <span class="va">n_tested</span> <span class="op">&gt;</span> <span class="fl">5000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html" class="external-link">desc</a></span><span class="op">(</span><span class="va">n_tested</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_tested</span>, <span class="va">pct_proficient</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">large_districts</span> <span class="op">&lt;-</span> <span class="va">assess_2024</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="va">is_state</span>, <span class="va">n_tested</span> <span class="op">&gt;</span> <span class="fl">5000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">n_tested</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">select</span><span class="op">(</span><span class="va">district_name</span>, <span class="va">n_tested</span>, <span class="va">pct_proficient</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">large_districts</span></span>
+<span><span class="co">#&gt;    district_name n_tested pct_proficient</span></span>
+<span><span class="co">#&gt; 1     MIAMI-DADE    25178             56</span></span>
+<span><span class="co">#&gt; 2        BROWARD    18457             57</span></span>
+<span><span class="co">#&gt; 3   HILLSBOROUGH    16802             51</span></span>
+<span><span class="co">#&gt; 4         ORANGE    15743             57</span></span>
+<span><span class="co">#&gt; 5     PALM BEACH    14593             54</span></span>
+<span><span class="co">#&gt; 6          DUVAL    10095             49</span></span>
+<span><span class="co">#&gt; 7           POLK     9295             49</span></span>
+<span><span class="co">#&gt; 8            LEE     7644             48</span></span>
+<span><span class="co">#&gt; 9       PINELLAS     6654             62</span></span>
+<span><span class="co">#&gt; 10         PASCO     6511             53</span></span></code></pre></div>
 <div class="float">
 <img src="https://almartin82.github.io/flschooldata/articles/florida-assessment_files/figure-html/miami-dade-chart-1.png" alt="Florida large district comparison"><div class="figcaption">Florida large district comparison</div>
 </div>
