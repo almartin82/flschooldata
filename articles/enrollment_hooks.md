@@ -179,7 +179,7 @@ driven by the Orlando metro boom.
 ``` r
 central_fl <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Orange|Osceola|Polk", district_name),
+         grepl("Orange|Osceola|Polk", district_name, ignore.case = TRUE),
          end_year %in% c(2015, 2024)) |>
   group_by(district_name) |>
   summarize(
@@ -191,9 +191,12 @@ central_fl <- enr |>
   arrange(desc(pct_change))
 
 central_fl
-#> # A tibble: 0 × 4
-#> # ℹ 4 variables: district_name <chr>, y2015 <dbl>, y2024 <dbl>,
-#> #   pct_change <dbl>
+#> # A tibble: 3 × 4
+#>   district_name  y2015  y2024 pct_change
+#>   <chr>          <dbl>  <dbl>      <dbl>
+#> 1 OSCEOLA        59276  74278       25.3
+#> 2 POLK           99650 115990       16.4
+#> 3 ORANGE        191640 207695        8.4
 ```
 
 ------------------------------------------------------------------------
@@ -206,20 +209,28 @@ families relocate.
 ``` r
 south_fl <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Broward|Miami-Dade", district_name),
+         grepl("Broward|Miami-Dade", district_name, ignore.case = TRUE),
          end_year >= 2018) |>
   select(end_year, district_name, n_students) |>
   pivot_wider(names_from = district_name, values_from = n_students)
 
 south_fl
-#> # A tibble: 0 × 1
-#> # ℹ 1 variable: end_year <int>
+#> # A tibble: 7 × 3
+#>   end_year BROWARD `MIAMI-DADE`
+#>      <int>   <dbl>        <dbl>
+#> 1     2018  271951       354767
+#> 2     2019  270961       350372
+#> 3     2020  269163       347239
+#> 4     2021  260224       334858
+#> 5     2022  256027       329483
+#> 6     2023  254728       335831
+#> 7     2024  251397       337610
 ```
 
 ``` r
 enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Broward|Miami-Dade", district_name),
+         grepl("Broward|Miami-Dade", district_name, ignore.case = TRUE),
          end_year >= 2018) |>
   ggplot(aes(x = end_year, y = n_students, color = district_name)) +
   geom_line(linewidth = 1.2) +
@@ -327,7 +338,7 @@ area. While South Florida declines, Tampa Bay has held steady.
 ``` r
 tampa <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Hillsborough|Pinellas|Pasco", district_name)) |>
+         grepl("Hillsborough|Pinellas|Pasco", district_name, ignore.case = TRUE)) |>
   group_by(district_name) |>
   summarize(
     y2015 = n_students[end_year == 2015],
@@ -338,15 +349,18 @@ tampa <- enr |>
   arrange(desc(y2024))
 
 tampa
-#> # A tibble: 0 × 4
-#> # ℹ 4 variables: district_name <chr>, y2015 <dbl>, y2024 <dbl>,
-#> #   pct_change <dbl>
+#> # A tibble: 3 × 4
+#>   district_name  y2015  y2024 pct_change
+#>   <chr>          <dbl>  <dbl>      <dbl>
+#> 1 HILLSBOROUGH  207457 224144        8  
+#> 2 PINELLAS      103754  90969      -12.3
+#> 3 PASCO          69218  85808       24
 ```
 
 ``` r
 enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Hillsborough|Pinellas|Pasco", district_name)) |>
+         grepl("Hillsborough|Pinellas|Pasco", district_name, ignore.case = TRUE)) |>
   ggplot(aes(x = end_year, y = n_students, color = district_name)) +
   geom_line(linewidth = 1.2) +
   geom_point(size = 2) +
@@ -373,13 +387,22 @@ Florida’s 6th largest district with over 125,000 students.
 ``` r
 jax <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Duval", district_name)) |>
+         grepl("Duval", district_name, ignore.case = TRUE)) |>
   select(end_year, district_name, n_students) |>
   mutate(change = n_students - lag(n_students))
 
 jax
-#> [1] end_year      district_name n_students    change       
-#> <0 rows> (or 0-length row.names)
+#>    end_year district_name n_students change
+#> 1      2015         DUVAL     128665     NA
+#> 2      2016         DUVAL     129169    504
+#> 3      2017         DUVAL     129414    245
+#> 4      2018         DUVAL     129562    148
+#> 5      2019         DUVAL     130224    662
+#> 6      2020         DUVAL     130283     59
+#> 7      2021         DUVAL     126802  -3481
+#> 8      2022         DUVAL     128939   2137
+#> 9      2023         DUVAL     129788    849
+#> 10     2024         DUVAL     129083   -705
 ```
 
 ``` r
