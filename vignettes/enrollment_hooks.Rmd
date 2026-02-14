@@ -150,7 +150,7 @@ Orange, Osceola, and Polk counties have been among the fastest-growing, driven b
 ```{r central-florida}
 central_fl <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Orange|Osceola|Polk", district_name),
+         grepl("Orange|Osceola|Polk", district_name, ignore.case = TRUE),
          end_year %in% c(2015, 2024)) |>
   group_by(district_name) |>
   summarize(
@@ -173,7 +173,7 @@ South Florida's two largest districts have been losing students as families relo
 ```{r south-florida}
 south_fl <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Broward|Miami-Dade", district_name),
+         grepl("Broward|Miami-Dade", district_name, ignore.case = TRUE),
          end_year >= 2018) |>
   select(end_year, district_name, n_students) |>
   pivot_wider(names_from = district_name, values_from = n_students)
@@ -184,7 +184,7 @@ south_fl
 ```{r south-florida-chart}
 enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Broward|Miami-Dade", district_name),
+         grepl("Broward|Miami-Dade", district_name, ignore.case = TRUE),
          end_year >= 2018) |>
   ggplot(aes(x = end_year, y = n_students, color = district_name)) +
   geom_line(linewidth = 1.2) +
@@ -270,7 +270,7 @@ Hillsborough and Pinellas counties represent Florida's other major metro area. W
 ```{r tampa-bay}
 tampa <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Hillsborough|Pinellas|Pasco", district_name)) |>
+         grepl("Hillsborough|Pinellas|Pasco", district_name, ignore.case = TRUE)) |>
   group_by(district_name) |>
   summarize(
     y2015 = n_students[end_year == 2015],
@@ -286,7 +286,7 @@ tampa
 ```{r tampa-bay-chart}
 enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Hillsborough|Pinellas|Pasco", district_name)) |>
+         grepl("Hillsborough|Pinellas|Pasco", district_name, ignore.case = TRUE)) |>
   ggplot(aes(x = end_year, y = n_students, color = district_name)) +
   geom_line(linewidth = 1.2) +
   geom_point(size = 2) +
@@ -310,7 +310,7 @@ Duval County (Jacksonville) often flies under the radar, but it's Florida's 6th 
 ```{r jacksonville}
 jax <- enr |>
   filter(is_district, subgroup == "total_enrollment", grade_level == "TOTAL",
-         grepl("Duval", district_name)) |>
+         grepl("Duval", district_name, ignore.case = TRUE)) |>
   select(end_year, district_name, n_students) |>
   mutate(change = n_students - lag(n_students))
 
